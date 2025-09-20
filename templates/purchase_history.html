@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Purchase History - {{ config.app_name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-history"></i> Purchase History</h4>
+            </div>
+            <div class="card-body">
+                {% if purchases %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Coins Spent</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="purchase-tbody">
+                            {% for purchase in purchases %}
+                            <tr>
+                                <td>{{ purchase[0] }}</td>
+                                <td>{{ purchase[1] }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if purchase[2] == 'pending' %}bg-warning
+                                        {% elif purchase[2] == 'approved' %}bg-info
+                                        {% elif purchase[2] == 'success' %}bg-success
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ purchase[2] }}
+                                    </span>
+                                </td>
+                                <td>{{ purchase[3] }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                    <h5>No purchases yet</h5>
+                    <p>Start earning coins and make your first purchase!</p>
+                    <a href="{{ url_for('earn_coins') }}" class="btn btn-primary">
+                        <i class="fas fa-coins"></i> Earn Coins
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

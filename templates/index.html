@@ -1,1 +1,55 @@
+{% extends "base.html" %}
 
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto text-center">
+        <div class="hero-section py-5">
+            <h1 class="display-4 fw-bold text-primary">
+                <i class="fas fa-coins"></i> Welcome to {{ config.app_name }}
+            </h1>
+            <p class="lead">Earn coins by completing simple tasks and exchange them for amazing rewards!</p>
+            
+            <div class="row mt-5">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-link fa-3x text-primary mb-3"></i>
+                            <h5>Complete Tasks</h5>
+                            <p>Visit links and earn coins for each completion</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-coins fa-3x text-warning mb-3"></i>
+                            <h5>Collect Coins</h5>
+                            <p>Build your coin balance with every task</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-gift fa-3x text-success mb-3"></i>
+                            <h5>Redeem Rewards</h5>
+                            <p>Exchange coins for games, vouchers, and more!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-5">
+                {% if not current_user.is_authenticated %}
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-user-plus"></i> Get Started
+                    </a>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

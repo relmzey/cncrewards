@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Earn Coins - {{ config.app_name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-coins"></i> Earn Coins</h4>
+                <p class="mb-0">Complete tasks by visiting links to earn coins. You can do this every 3 hours.</p>
+            </div>
+            <div class="card-body">
+                {% if cooldown_remaining %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-clock"></i> You can earn coins again in: 
+                    <span id="cooldown-timer" data-remaining="{{ cooldown_remaining.total_seconds() }}">
+                        {{ cooldown_remaining }}
+                    </span>
+                </div>
+                {% else %}
+
+                <div class="row">
+                    {% if not cooldown_remaining %}
+                    {% for link_name, link_data in timer_config.links.items() %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card link-card h-100">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">{{ link_data.display_name }}</h5>
+                                <div class="coin-reward mb-3">
+                                    <span class="badge bg-warning fs-6">{{ link_data.coins }} <i class="fas fa-coins"></i></span>
+                                </div>
+                                
+                                {% if link_name in active_timers %}
+                                    <button class="btn btn-secondary disabled" disabled id="btn-{{ link_name }}">
+                                        <i class="fas fa-clock"></i> Please Wait...
+                                    </button>
+                                {% else %}
+                                    <button class="btn btn-primary" onclick="generateLink('{{ link_name }}')" id="btn-{{ link_name }}">
+                                        <i class="fas fa-link"></i> Generate Link
+                                    </button>
+                                {% endif %}
+                                
+                                <div class="mt-2">
+                                    <a href="{{ links_config.tutorials.get('earn_tutorial', '#') }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                        <i class="fab fa-youtube"></i> Tutorial
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="col-12 text-center">
+                        <p class="text-muted">Please wait for the cooldown to finish before earning more coins.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function generateLink(linkType) {
+    fetch(`/generate_link/${linkType}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.open(data.shortened_url, '_blank');
+                startTimer(linkType, data.timer_minutes);
+                document.getElementById(`btn-${linkType}`).disabled = true;
+                document.getElementById(`btn-${linkType}`).classList.add('disabled');
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred');
+        });
+}
+
+// Cooldown timer
+const cooldownElement = document.getElementById('cooldown-timer');
+if (cooldownElement) {
+    let remainingSeconds = parseInt(cooldownElement.dataset.remaining);
+    
+    const updateCooldownTimer = () => {
+        if (remainingSeconds <= 0) {
+            location.reload();
+            return;
+        }
+        
+        const hours = Math.floor(remainingSeconds / 3600);
+        const minutes = Math.floor((remainingSeconds % 3600) / 60);
+        const seconds = remainingSeconds % 60;
+        
+        cooldownElement.textContent = `${hours}h ${minutes}m ${seconds}s`;
+        remainingSeconds--;
+    };
+    
+    updateCooldownTimer();
+    setInterval(updateCooldownTimer, 1000);
+}
+</script>
+{% endblock %}
