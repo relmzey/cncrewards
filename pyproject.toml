@@ -1,0 +1,15 @@
+[project]
+name = "repl-nix-workspace"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.11"
+dependencies = [
+    "apscheduler>=3.11.0",
+    "dnspython>=2.8.0",
+    "flask>=3.1.2",
+    "flask-login>=0.6.3",
+    "flask-mail>=0.10.0",
+    "pymongo>=4.15.1",
+    "requests>=2.32.5",
+    "werkzeug>=3.1.3",
+]

@@ -1,0 +1,13 @@
+{
+  "app_name": "KP REWARDS",
+  "created_by": "Relmzey",
+  "youtube_channel": "@cnc_yt",
+  "database_url": "sqlite:///kprp_rewards.db",
+  "email_config": {
+    "smtp_server": "smtp.sendgrid.net",
+    "smtp_port": 587
+  },
+  "conversion_rate": {
+    "coins_per_rupee": 20
+  }
+}
