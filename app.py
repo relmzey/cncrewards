@@ -327,7 +327,27 @@ def reset_password(email):
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html', user=current_user, config=config)
+    # Get user data with creation date
+    user_data = users_collection.find_one({"_id": ObjectId(current_user.id)})
+    
+    # Get purchase count
+    purchase_count = purchases_collection.count_documents({"user_id": ObjectId(current_user.id)})
+    
+    # Get recent purchases (last 5)
+    recent_purchases_cursor = purchases_collection.find({
+        "user_id": ObjectId(current_user.id)
+    }).sort("created_at", -1).limit(5)
+    
+    recent_purchases = list(recent_purchases_cursor)
+    
+    # Update current_user object with creation date
+    current_user.created_at = user_data.get('created_at')
+    
+    return render_template('dashboard.html', 
+                         user=current_user, 
+                         config=config,
+                         purchase_count=purchase_count,
+                         recent_purchases=recent_purchases)
 
 @app.route('/logout')
 @login_required
@@ -509,14 +529,7 @@ def purchase_history():
         "user_id": ObjectId(current_user.id)
     }).sort("created_at", -1)
     
-    purchases = []
-    for purchase in purchases_cursor:
-        purchases.append({
-            'item_name': purchase['item_name'],
-            'coins_spent': purchase['coins_spent'],
-            'status': purchase['status'],
-            'created_at': purchase['created_at']
-        })
+    purchases = list(purchases_cursor)
     
     return render_template('purchase_history.html', purchases=purchases, config=config)
 
@@ -571,7 +584,8 @@ def admin_dashboard():
             'item_details': purchase.get('item_details', ''),
             'store_type': purchase.get('store_type', ''),
             'admin_code': purchase.get('admin_code', ''),
-            'voucher_code': purchase.get('voucher_code', '')
+            'voucher_code': purchase.get('voucher_code', ''),
+            'proof_image': purchase.get('proof_image', '')
         })
     
     return render_template('admin_dashboard.html', purchases=purchases, config=config)
@@ -692,6 +706,105 @@ The {config['app_name']} Team
     
     return jsonify({'success': True})
 
+@app.route('/complete_upi_transfer', methods=['POST'])
+@login_required
+def complete_upi_transfer():
+    if current_user.email not in access_config['admin_emails']:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    purchase_id = request.form['purchase_id']
+    
+    # Handle transfer proof upload
+    transfer_proof_path = None
+    if 'transfer_proof' in request.files:
+        proof_file = request.files['transfer_proof']
+        if proof_file and proof_file.filename:
+            # Create uploads directory if it doesn't exist
+            import os
+            uploads_dir = 'static/admin_uploads'
+            if not os.path.exists(uploads_dir):
+                os.makedirs(uploads_dir)
+            
+            # Save file with unique name
+            import uuid
+            file_extension = proof_file.filename.rsplit('.', 1)[1].lower()
+            unique_filename = f"transfer_{uuid.uuid4()}.{file_extension}"
+            transfer_proof_path = f"{uploads_dir}/{unique_filename}"
+            proof_file.save(transfer_proof_path)
+    
+    if not transfer_proof_path:
+        return jsonify({'error': 'Transfer proof is required'}), 400
+    
+    # Get order details
+    purchase_data = purchases_collection.aggregate([
+        {"$match": {"_id": ObjectId(purchase_id)}},
+        {
+            "$lookup": {
+                "from": "users",
+                "localField": "user_id",
+                "foreignField": "_id",
+                "as": "user"
+            }
+        },
+        {"$unwind": "$user"}
+    ]).next()
+    
+    if not purchase_data:
+        return jsonify({'error': 'Order not found'}), 404
+    
+    # Update order with transfer proof and set to success
+    purchases_collection.update_one(
+        {"_id": ObjectId(purchase_id)},
+        {"$set": {"transfer_proof": transfer_proof_path, "status": "success"}}
+    )
+    
+    # Send success email with transfer proof
+    item_name = purchase_data['item_name']
+    username = purchase_data['user']['username']
+    email = purchase_data['user']['email']
+    
+    subject = f"Order #{purchase_id} Completed - UPI Transfer Sent - {config['app_name']}"
+    content = f"""
+Dear {username},
+
+🎉 Great news! Your UPI voucher order has been completed successfully.
+
+Order ID: #{purchase_id}
+Item: {item_name}
+Status: Completed ✅
+
+💰 The money has been transferred to your UPI ID! Please check your UPI app for the payment confirmation.
+
+Transfer proof has been attached to this order for your reference.
+
+If you don't receive the payment within a few minutes, please contact our support team with your order ID.
+
+Thank you for using {config['app_name']}!
+
+Best regards,
+The {config['app_name']} Team
+    """
+    
+    send_email(email, subject, content)
+    
+    # Send webhook notification
+    webhook_fields = [
+        {"name": "Order ID", "value": f"#{purchase_id}", "inline": True},
+        {"name": "User", "value": username, "inline": True},
+        {"name": "Item", "value": item_name, "inline": True},
+        {"name": "Status", "value": "Completed", "inline": True},
+        {"name": "Transfer Proof", "value": "Uploaded", "inline": True}
+    ]
+    
+    send_webhook_log(
+        "💰 UPI Transfer Completed",
+        f"Order #{purchase_id} completed with UPI transfer proof uploaded",
+        0x00ff00,
+        webhook_fields
+    )
+    
+    return jsonify({'success': True})
+
 @app.route('/give_coins', methods=['POST'])
 @login_required
 def give_coins():
@@ -712,12 +825,74 @@ def give_coins():
     else:
         return jsonify({'error': 'User not found'})
 
+@app.route('/delete_user', methods=['POST'])
+@login_required
+def delete_user():
+    if current_user.email not in access_config['admin_emails']:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    username = request.form['username']
+    
+    user = users_collection.find_one({"username": username})
+    
+    if not user:
+        return jsonify({'error': 'User not found'})
+    
+    user_id = user['_id']
+    
+    try:
+        # Delete user's purchases
+        purchases_collection.delete_many({"user_id": user_id})
+        
+        # Delete user's timers
+        user_timers_collection.delete_many({"user_id": user_id})
+        
+        # Delete user's cooldowns
+        user_cooldowns_collection.delete_many({"user_id": user_id})
+        
+        # Delete the user
+        users_collection.delete_one({"_id": user_id})
+        
+        # Send webhook notification
+        send_webhook_log(
+            "🗑️ User Deleted",
+            f"Admin **{current_user.username}** deleted user **{username}**",
+            0xff0000,
+            [
+                {"name": "Deleted User", "value": username, "inline": True},
+                {"name": "Admin", "value": current_user.username, "inline": True}
+            ]
+        )
+        
+        return jsonify({'success': True, 'message': f'Successfully deleted user {username} and all associated data'})
+        
+    except Exception as e:
+        return jsonify({'error': f'Error deleting user: {str(e)}'})
+
 @app.route('/purchase', methods=['POST'])
 @login_required
 def purchase():
     item_type = request.form['item_type']
     coins = int(request.form['coins'])
     additional_info = request.form.get('additional_info', '')
+    
+    # Handle file upload for UPI vouchers
+    proof_image_path = None
+    if 'proof_image' in request.files:
+        proof_file = request.files['proof_image']
+        if proof_file and proof_file.filename:
+            # Create uploads directory if it doesn't exist
+            import os
+            uploads_dir = 'static/uploads'
+            if not os.path.exists(uploads_dir):
+                os.makedirs(uploads_dir)
+            
+            # Save file with unique name
+            import uuid
+            file_extension = proof_file.filename.rsplit('.', 1)[1].lower()
+            unique_filename = f"{uuid.uuid4()}.{file_extension}"
+            proof_image_path = f"{uploads_dir}/{unique_filename}"
+            proof_file.save(proof_image_path)
     
     # Check if user has enough balance
     user_data = users_collection.find_one({"_id": ObjectId(current_user.id)})
@@ -739,6 +914,19 @@ def purchase():
         'kprp_cash_30l': 'KPRP 30 Lakh In-Game Cash',
         'kprp_cash_50l': 'KPRP 50 Lakh In-Game Cash',
         'kprp_cash_1cr': 'KPRP 1 Cr In-Game Cash',
+        'kprp_vip_base': 'KPRP Base VIP Plan',
+        'kprp_vip_bronze': 'KPRP Bronze VIP Plan',
+        'kprp_vip_silver': 'KPRP Silver VIP Plan',
+        'kprp_vip_gold': 'KPRP Gold VIP Plan',
+        'kprp_vip_diamond': 'KPRP Diamond VIP Plan',
+        'kprp_vip_legendary': 'KPRP Legendary VIP Plan',
+        'kprp_car_normal': 'KPRP Normal Car',
+        'kprp_car_normal_2nd': 'KPRP Normal 2nd Class Car',
+        'kprp_car_normal_3rd': 'KPRP Normal 3rd Class Car',
+        'kprp_car_rare_2nd': 'KPRP Rare 2nd Class Car',
+        'kprp_car_rare_1st': 'KPRP Rare 1st Class Car',
+        'kprp_car_restricted': 'KPRP Restricted Car',
+        'kprp_car_exotic': 'KPRP Exotic Car',
         'kprp_voucher_10': 'KPRP ₹10 Voucher',
         'kprp_voucher_50': 'KPRP ₹50 Voucher',
         'kprp_voucher_100': 'KPRP ₹100 Voucher',
@@ -804,6 +992,9 @@ def purchase():
     if voucher_code:
         purchase_doc["voucher_code"] = voucher_code
     
+    if proof_image_path:
+        purchase_doc["proof_image"] = proof_image_path
+    
     result = purchases_collection.insert_one(purchase_doc)
     purchase_id = str(result.inserted_id)
     
@@ -842,6 +1033,11 @@ Your order will be processed within 1-24 hours. You'll receive updates as your o
 Best regards,
 The {config['app_name']} Team
     """
+    
+    # For UPI vouchers, include proof image info in admin notification
+    if proof_image_path:
+        content += f"\n\nNote: Payment proof has been uploaded and will be reviewed by our admin team."
+        
     send_email(current_user.email, subject, content)
     
     return jsonify({'success': True, 'order_id': purchase_id})
