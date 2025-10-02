@@ -24,18 +24,18 @@
                         <tbody id="purchase-tbody">
                             {% for purchase in purchases %}
                             <tr>
-                                <td>{{ purchase[0] }}</td>
-                                <td>{{ purchase[1] }}</td>
+                                <td>{{ purchase.item_name }}</td>
+                                <td>{{ purchase.coins_spent }}</td>
                                 <td>
                                     <span class="badge 
-                                        {% if purchase[2] == 'pending' %}bg-warning
-                                        {% elif purchase[2] == 'approved' %}bg-info
-                                        {% elif purchase[2] == 'success' %}bg-success
+                                        {% if purchase.status == 'pending' %}bg-warning
+                                        {% elif purchase.status == 'approved' %}bg-info
+                                        {% elif purchase.status == 'success' %}bg-success
                                         {% else %}bg-secondary{% endif %}">
-                                        {{ purchase[2] }}
+                                        {{ purchase.status }}
                                     </span>
                                 </td>
-                                <td>{{ purchase[3] }}</td>
+                                <td>{{ purchase.created_at.strftime('%b %d, %Y at %I:%M %p') if purchase.created_at else 'N/A' }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>

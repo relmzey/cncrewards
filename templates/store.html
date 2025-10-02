@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block title %}Store - {{ config.app_name }}{% endblock %}
@@ -24,7 +23,7 @@
                 <div class="row text-center">
                     <div class="col-md-3 mb-2">
                         <button class="btn btn-outline-primary w-100" onclick="showStore('freefire')">
-                            <i class="fas fa-fire"></i> Free Fire
+                            <i class="fas fa-heart"></i> Like Store
                         </button>
                     </div>
                     <div class="col-md-3 mb-2">
@@ -46,11 +45,11 @@
             </div>
         </div>
 
-        <!-- Free Fire Store -->
+        <!-- Like Store -->
         <div id="freefire-store" class="store-section">
             <div class="card mb-4">
                 <div class="card-header">
-                    <h4><i class="fas fa-heart text-danger"></i> Free Fire Like Store</h4>
+                    <h4><i class="fas fa-heart text-danger"></i> Like Store</h4>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -60,7 +59,7 @@
                                     <h6>1 Day Likes</h6>
                                     <p>50-100 likes per day</p>
                                     <p><strong>₹1 → 20 Coins</strong></p>
-                                    <button class="btn btn-primary" onclick="showPurchaseModal('ff_likes_1day', 20, '1 Day Free Fire Likes', 'ff')">Buy Now</button>
+                                    <button class="btn btn-primary" onclick="showPurchaseModal('ff_likes_1day', 20, '1 Day Social Media Likes', 'ff')">Buy Now</button>
                                 </div>
                             </div>
                         </div>
@@ -70,7 +69,7 @@
                                     <h6>7 Days Auto Likes</h6>
                                     <p>50-100 likes per day</p>
                                     <p><strong>₹5 → 100 Coins</strong></p>
-                                    <button class="btn btn-primary" onclick="showPurchaseModal('ff_likes_7day', 100, '7 Days Auto Free Fire Likes', 'ff')">Buy Now</button>
+                                    <button class="btn btn-primary" onclick="showPurchaseModal('ff_likes_7day', 100, '7 Days Auto Social Media Likes', 'ff')">Buy Now</button>
                                 </div>
                             </div>
                         </div>
@@ -80,71 +79,7 @@
                                     <h6>30 Days Auto Likes</h6>
                                     <p>50-100 likes per day</p>
                                     <p><strong>₹20 → 400 Coins</strong></p>
-                                    <button class="btn btn-primary" onclick="showPurchaseModal('ff_likes_30day', 400, '30 Days Auto Free Fire Likes', 'ff')">Buy Now</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h4><i class="fas fa-gem text-primary"></i> Free Fire Diamond Store</h4>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <div class="store-item card h-100">
-                                <div class="card-body text-center">
-                                    <h6>100 Diamonds</h6>
-                                    <p><strong>₹80 → 1,600 Coins</strong></p>
-                                    <button class="btn btn-primary" onclick="showPurchaseModal('ff_diamond_100', 1600, '100 Free Fire Diamonds', 'ff')">Buy Now</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="store-item card h-100">
-                                <div class="card-body text-center">
-                                    <h6>310 Diamonds</h6>
-                                    <p><strong>₹240 → 4,800 Coins</strong></p>
-                                    <button class="btn btn-primary" onclick="showPurchaseModal('ff_diamond_310', 4800, '310 Free Fire Diamonds', 'ff')">Buy Now</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="store-item card h-100">
-                                <div class="card-body text-center">
-                                    <h6>520 Diamonds</h6>
-                                    <p><strong>₹400 → 8,000 Coins</strong></p>
-                                    <button class="btn btn-primary" onclick="showPurchaseModal('ff_diamond_520', 8000, '520 Free Fire Diamonds', 'ff')">Buy Now</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="store-item card h-100">
-                                <div class="card-body text-center">
-                                    <h6>1060 Diamonds</h6>
-                                    <p><strong>₹800 → 16,000 Coins</strong></p>
-                                    <button class="btn btn-primary" onclick="showPurchaseModal('ff_diamond_1060', 16000, '1060 Free Fire Diamonds', 'ff')">Buy Now</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="store-item card h-100">
-                                <div class="card-body text-center">
-                                    <h6>2180 Diamonds</h6>
-                                    <p><strong>₹1,600 → 32,000 Coins</strong></p>
-                                    <button class="btn btn-primary" onclick="showPurchaseModal('ff_diamond_2180', 32000, '2180 Free Fire Diamonds', 'ff')">Buy Now</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="store-item card h-100">
-                                <div class="card-body text-center">
-                                    <h6>5600 Diamonds</h6>
-                                    <p><strong>₹4,000 → 80,000 Coins</strong></p>
-                                    <button class="btn btn-primary" onclick="showPurchaseModal('ff_diamond_5600', 80000, '5600 Free Fire Diamonds', 'ff')">Buy Now</button>
+                                    <button class="btn btn-primary" onclick="showPurchaseModal('ff_likes_30day', 400, '30 Days Auto Social Media Likes', 'ff')">Buy Now</button>
                                 </div>
                             </div>
                         </div>
@@ -155,9 +90,10 @@
 
         <!-- KPRP Store -->
         <div id="kprp-store" class="store-section" style="display: none;">
-            <div class="card">
+            <div class="card mb-4">
                 <div class="card-header">
                     <h4><i class="fas fa-money-bill text-success"></i> KPRP In-Game Cash</h4>
+                    <p class="mb-0 text-white"><i class="fas fa-info-circle"></i> Conversion Rate: 20 Coins = ₹1</p>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -200,13 +136,148 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Vouchers Store -->
-        <div id="vouchers-store" class="store-section" style="display: none;">
             <div class="card mb-4">
                 <div class="card-header">
-                    <h4><i class="fas fa-ticket-alt text-warning"></i> KPRP Vouchers</h4>
+                    <h4><i class="fas fa-star text-warning"></i> VIP Plans</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>Base Plan</h6>
+                                    <p><strong>₹165 → 3,300 Coins</strong></p>
+                                    <button class="btn btn-warning" onclick="showPurchaseModal('kprp_vip_base', 3300, 'KPRP Base VIP Plan', 'kprp')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>Bronze Plan</h6>
+                                    <p><strong>₹220 → 4,400 Coins</strong></p>
+                                    <button class="btn btn-warning" onclick="showPurchaseModal('kprp_vip_bronze', 4400, 'KPRP Bronze VIP Plan', 'kprp')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>Silver Plan</h6>
+                                    <p><strong>₹275 → 5,500 Coins</strong></p>
+                                    <button class="btn btn-warning" onclick="showPurchaseModal('kprp_vip_silver', 5500, 'KPRP Silver VIP Plan', 'kprp')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>Gold Plan</h6>
+                                    <p><strong>₹380 → 7,600 Coins</strong></p>
+                                    <button class="btn btn-warning" onclick="showPurchaseModal('kprp_vip_gold', 7600, 'KPRP Gold VIP Plan', 'kprp')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>Diamond Plan</h6>
+                                    <p><strong>₹550 → 11,000 Coins</strong></p>
+                                    <button class="btn btn-warning" onclick="showPurchaseModal('kprp_vip_diamond', 11000, 'KPRP Diamond VIP Plan', 'kprp')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>Legendary Plan</h6>
+                                    <p><strong>₹850 → 17,000 Coins</strong></p>
+                                    <button class="btn btn-warning" onclick="showPurchaseModal('kprp_vip_legendary', 17000, 'KPRP Legendary VIP Plan', 'kprp')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4><i class="fas fa-car text-primary"></i> VIP Cars</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>Normal Car</h6>
+                                    <p><strong>₹40 → 800 Coins</strong></p>
+                                    <button class="btn btn-primary" onclick="showPurchaseModal('kprp_car_normal', 800, 'KPRP Normal Car', 'kprp')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>Normal 2nd Class</h6>
+                                    <p><strong>₹60 → 1,200 Coins</strong></p>
+                                    <button class="btn btn-primary" onclick="showPurchaseModal('kprp_car_normal_2nd', 1200, 'KPRP Normal 2nd Class Car', 'kprp')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>Normal 3rd Class</h6>
+                                    <p><strong>₹80 → 1,600 Coins</strong></p>
+                                    <button class="btn btn-primary" onclick="showPurchaseModal('kprp_car_normal_3rd', 1600, 'KPRP Normal 3rd Class Car', 'kprp')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>Rare 2nd Class</h6>
+                                    <p><strong>₹120 → 2,400 Coins</strong></p>
+                                    <button class="btn btn-primary" onclick="showPurchaseModal('kprp_car_rare_2nd', 2400, 'KPRP Rare 2nd Class Car', 'kprp')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>Rare 1st Class</h6>
+                                    <p><strong>₹140 → 2,800 Coins</strong></p>
+                                    <button class="btn btn-primary" onclick="showPurchaseModal('kprp_car_rare_1st', 2800, 'KPRP Rare 1st Class Car', 'kprp')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>Restricted Car</h6>
+                                    <p><strong>₹200 → 4,000 Coins</strong></p>
+                                    <button class="btn btn-primary" onclick="showPurchaseModal('kprp_car_restricted', 4000, 'KPRP Restricted Car', 'kprp')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>Exotic Car</h6>
+                                    <p><strong>₹250 → 5,000 Coins</strong></p>
+                                    <button class="btn btn-primary" onclick="showPurchaseModal('kprp_car_exotic', 5000, 'KPRP Exotic Car', 'kprp')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-ticket-alt text-info"></i> KPRP Vouchers</h4>
+                    <p class="mb-0 text-white"><i class="fas fa-info-circle"></i> Use to buy any item of equal value</p>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -215,7 +286,7 @@
                                 <div class="card-body text-center">
                                     <h6>₹10 Voucher</h6>
                                     <p><strong>200 Coins</strong></p>
-                                    <button class="btn btn-warning" onclick="showPurchaseModal('kprp_voucher_10', 200, '₹10 KPRP Voucher', 'kprp_voucher')">Buy Now</button>
+                                    <button class="btn btn-info" onclick="showPurchaseModal('kprp_voucher_10', 200, '₹10 KPRP Voucher', 'kprp_voucher')">Buy Now</button>
                                 </div>
                             </div>
                         </div>
@@ -224,7 +295,7 @@
                                 <div class="card-body text-center">
                                     <h6>₹50 Voucher</h6>
                                     <p><strong>1,000 Coins</strong></p>
-                                    <button class="btn btn-warning" onclick="showPurchaseModal('kprp_voucher_50', 1000, '₹50 KPRP Voucher', 'kprp_voucher')">Buy Now</button>
+                                    <button class="btn btn-info" onclick="showPurchaseModal('kprp_voucher_50', 1000, '₹50 KPRP Voucher', 'kprp_voucher')">Buy Now</button>
                                 </div>
                             </div>
                         </div>
@@ -233,7 +304,7 @@
                                 <div class="card-body text-center">
                                     <h6>₹100 Voucher</h6>
                                     <p><strong>2,000 Coins</strong></p>
-                                    <button class="btn btn-warning" onclick="showPurchaseModal('kprp_voucher_100', 2000, '₹100 KPRP Voucher', 'kprp_voucher')">Buy Now</button>
+                                    <button class="btn btn-info" onclick="showPurchaseModal('kprp_voucher_100', 2000, '₹100 KPRP Voucher', 'kprp_voucher')">Buy Now</button>
                                 </div>
                             </div>
                         </div>
@@ -242,7 +313,7 @@
                                 <div class="card-body text-center">
                                     <h6>₹200 Voucher</h6>
                                     <p><strong>4,000 Coins</strong></p>
-                                    <button class="btn btn-warning" onclick="showPurchaseModal('kprp_voucher_200', 4000, '₹200 KPRP Voucher', 'kprp_voucher')">Buy Now</button>
+                                    <button class="btn btn-info" onclick="showPurchaseModal('kprp_voucher_200', 4000, '₹200 KPRP Voucher', 'kprp_voucher')">Buy Now</button>
                                 </div>
                             </div>
                         </div>
@@ -251,7 +322,7 @@
                                 <div class="card-body text-center">
                                     <h6>₹500 Voucher</h6>
                                     <p><strong>10,000 Coins</strong></p>
-                                    <button class="btn btn-warning" onclick="showPurchaseModal('kprp_voucher_500', 10000, '₹500 KPRP Voucher', 'kprp_voucher')">Buy Now</button>
+                                    <button class="btn btn-info" onclick="showPurchaseModal('kprp_voucher_500', 10000, '₹500 KPRP Voucher', 'kprp_voucher')">Buy Now</button>
                                 </div>
                             </div>
                         </div>
@@ -260,7 +331,75 @@
                                 <div class="card-body text-center">
                                     <h6>₹1000 Voucher</h6>
                                     <p><strong>20,000 Coins</strong></p>
-                                    <button class="btn btn-warning" onclick="showPurchaseModal('kprp_voucher_1000', 20000, '₹1000 KPRP Voucher', 'kprp_voucher')">Buy Now</button>
+                                    <button class="btn btn-info" onclick="showPurchaseModal('kprp_voucher_1000', 20000, '₹1000 KPRP Voucher', 'kprp_voucher')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Free Fire Diamond Store -->
+        <div id="vouchers-store" class="store-section" style="display: none;">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4><i class="fas fa-gem text-warning"></i> 💎 Free Fire Diamond Store</h4>
+                    <p class="mb-0 text-white"><i class="fas fa-info-circle"></i> 💰 Conversion Rate: 20 Coins = ₹1</p>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>100 Diamonds</h6>
+                                    <p><strong>₹80 → 1,600 Coins</strong></p>
+                                    <button class="btn btn-warning" onclick="showPurchaseModal('ff_diamond_100', 1600, '100 Free Fire Diamonds', 'ff')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>310 Diamonds</h6>
+                                    <p><strong>₹240 → 4,800 Coins</strong></p>
+                                    <button class="btn btn-warning" onclick="showPurchaseModal('ff_diamond_310', 4800, '310 Free Fire Diamonds', 'ff')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>520 Diamonds</h6>
+                                    <p><strong>₹400 → 8,000 Coins</strong></p>
+                                    <button class="btn btn-warning" onclick="showPurchaseModal('ff_diamond_520', 8000, '520 Free Fire Diamonds', 'ff')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>1060 Diamonds</h6>
+                                    <p><strong>₹800 → 16,000 Coins</strong></p>
+                                    <button class="btn btn-warning" onclick="showPurchaseModal('ff_diamond_1060', 16000, '1060 Free Fire Diamonds', 'ff')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>2180 Diamonds</h6>
+                                    <p><strong>₹1,600 → 32,000 Coins</strong></p>
+                                    <button class="btn btn-warning" onclick="showPurchaseModal('ff_diamond_2180', 32000, '2180 Free Fire Diamonds', 'ff')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>5600 Diamonds</h6>
+                                    <p><strong>₹4,000 → 80,000 Coins</strong></p>
+                                    <button class="btn btn-warning" onclick="showPurchaseModal('ff_diamond_5600', 80000, '5600 Free Fire Diamonds', 'ff')">Buy Now</button>
                                 </div>
                             </div>
                         </div>
@@ -483,6 +622,71 @@
         <div id="gaming-store" class="store-section" style="display: none;">
             <div class="card mb-4">
                 <div class="card-header">
+                    <h4><i class="fas fa-gem text-warning"></i> 💎 Free Fire Diamond Store</h4>
+                    <p class="mb-0 text-white"><i class="fas fa-info-circle"></i> 💰 Conversion Rate: 20 Coins = ₹1</p>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>100 Diamonds</h6>
+                                    <p><strong>₹80 → 1,600 Coins</strong></p>
+                                    <button class="btn btn-warning" onclick="showPurchaseModal('ff_diamond_100', 1600, '100 Free Fire Diamonds', 'ff')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>310 Diamonds</h6>
+                                    <p><strong>₹240 → 4,800 Coins</strong></p>
+                                    <button class="btn btn-warning" onclick="showPurchaseModal('ff_diamond_310', 4800, '310 Free Fire Diamonds', 'ff')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>520 Diamonds</h6>
+                                    <p><strong>₹400 → 8,000 Coins</strong></p>
+                                    <button class="btn btn-warning" onclick="showPurchaseModal('ff_diamond_520', 8000, '520 Free Fire Diamonds', 'ff')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>1060 Diamonds</h6>
+                                    <p><strong>₹800 → 16,000 Coins</strong></p>
+                                    <button class="btn btn-warning" onclick="showPurchaseModal('ff_diamond_1060', 16000, '1060 Free Fire Diamonds', 'ff')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>2180 Diamonds</h6>
+                                    <p><strong>₹1,600 → 32,000 Coins</strong></p>
+                                    <button class="btn btn-warning" onclick="showPurchaseModal('ff_diamond_2180', 32000, '2180 Free Fire Diamonds', 'ff')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="store-item card h-100">
+                                <div class="card-body text-center">
+                                    <h6>5600 Diamonds</h6>
+                                    <p><strong>₹4,000 → 80,000 Coins</strong></p>
+                                    <button class="btn btn-warning" onclick="showPurchaseModal('ff_diamond_5600', 80000, '5600 Free Fire Diamonds', 'ff')">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
                     <h4><i class="fas fa-gamepad text-primary"></i> PUBG UC Store</h4>
                 </div>
                 <div class="card-body">
@@ -611,7 +815,7 @@
                 <form id="purchaseForm">
                     <input type="hidden" id="modalItemType" name="item_type">
                     <input type="hidden" id="modalCoinsCost" name="coins">
-                    
+
                     <div id="ffFields" style="display: none;">
                         <div class="mb-3">
                             <label for="ffUid" class="form-label">Free Fire UID <span class="text-danger">*</span></label>
@@ -619,7 +823,7 @@
                             <div class="form-text">Your Free Fire User ID (found in game profile)</div>
                         </div>
                     </div>
-                    
+
                     <div id="kprpFields" style="display: none;">
                         <div class="mb-3">
                             <label for="kprpName" class="form-label">KPRP In-Game Name <span class="text-danger">*</span></label>
@@ -627,7 +831,7 @@
                             <div class="form-text">Your exact in-game username in KPRP</div>
                         </div>
                     </div>
-                    
+
                     <div id="upiFields" style="display: none;">
                         <div class="mb-3">
                             <label for="upiId" class="form-label">UPI ID <span class="text-danger">*</span></label>
@@ -635,7 +839,7 @@
                             <div class="form-text">Your UPI ID for payment transfer</div>
                         </div>
                     </div>
-                    
+
                     <div id="emailFields" style="display: none;">
                         <div class="mb-3">
                             <label for="emailAddress" class="form-label">Email Address <span class="text-danger">*</span></label>
@@ -643,7 +847,7 @@
                             <div class="form-text">Code will be sent to this email address</div>
                         </div>
                     </div>
-                    
+
                     <div id="pubgFields" style="display: none;">
                         <div class="mb-3">
                             <label for="pubgPlayerId" class="form-label">PUBG Player ID <span class="text-danger">*</span></label>
@@ -656,10 +860,36 @@
                             <div class="form-text">For order confirmation</div>
                         </div>
                     </div>
-                    
+
                     <div id="voucherFields" style="display: none;">
                         <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i> This voucher will be generated automatically and sent to your registered email.
+                            <i class="fas fa-info-circle"></i> Voucher will be sent after order approval and completion.
+                        </div>
+                    </div>
+
+                    <div id="googlePlayFields" style="display: none;">
+                        <div class="mb-3">
+                            <label for="googlePlayCode" class="form-label">Google Play Redeem Code <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="googlePlayCode" name="googlePlayCode" placeholder="Enter the Google Play Redeem Code">
+                            <div class="form-text">The Google Play Redeem Code</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="googlePlayProof" class="form-label">Proof of Purchase <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control" id="googlePlayProof" name="googlePlayProof" accept="image/*">
+                            <div class="form-text">Upload a screenshot of your Google Play purchase</div>
+                        </div>
+                    </div>
+
+                    <div id="amazonFields" style="display: none;">
+                        <div class="mb-3">
+                            <label for="amazonCode" class="form-label">Amazon Redeem Code <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="amazonCode" name="amazonCode" placeholder="Enter the Amazon Redeem Code">
+                            <div class="form-text">The Amazon Redeem Code</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="amazonProof" class="form-label">Proof of Purchase <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control" id="amazonProof" name="amazonProof" accept="image/*">
+                            <div class="form-text">Upload a screenshot of your Amazon purchase</div>
                         </div>
                     </div>
                 </form>
@@ -720,7 +950,7 @@ function showStore(storeType) {
     document.querySelectorAll('.store-section').forEach(section => {
         section.style.display = 'none';
     });
-    
+
     // Show selected store
     document.getElementById(storeType + '-store').style.display = 'block';
 }
@@ -730,21 +960,21 @@ function showPurchaseModal(itemType, coins, itemName, fieldType) {
         alert('Insufficient balance! You need ' + coins + ' coins for this item.');
         return;
     }
-    
+
     currentItemType = itemType;
     currentCoins = coins;
     currentFieldType = fieldType;
-    
+
     document.getElementById('modalItemName').textContent = itemName;
     document.getElementById('modalCoins').textContent = coins;
     document.getElementById('modalItemType').value = itemType;
     document.getElementById('modalCoinsCost').value = coins;
-    
+
     // Hide all field sections
     document.querySelectorAll('[id$="Fields"]').forEach(field => {
         field.style.display = 'none';
     });
-    
+
     // Clear all input fields
     document.getElementById('ffUid').value = '';
     document.getElementById('kprpName').value = '';
@@ -752,7 +982,12 @@ function showPurchaseModal(itemType, coins, itemName, fieldType) {
     document.getElementById('emailAddress').value = '';
     document.getElementById('pubgPlayerId').value = '';
     document.getElementById('pubgEmail').value = '';
-    
+    document.getElementById('googlePlayCode').value = '';
+    document.getElementById('amazonCode').value = '';
+    document.getElementById('googlePlayProof').value = '';
+    document.getElementById('amazonProof').value = '';
+
+
     // Show appropriate fields
     if (fieldType === 'ff') {
         document.getElementById('ffFields').style.display = 'block';
@@ -766,8 +1001,12 @@ function showPurchaseModal(itemType, coins, itemName, fieldType) {
         document.getElementById('pubgFields').style.display = 'block';
     } else if (fieldType === 'kprp_voucher') {
         document.getElementById('voucherFields').style.display = 'block';
+    } else if (fieldType === 'google_play') {
+        document.getElementById('googlePlayFields').style.display = 'block';
+    } else if (fieldType === 'amazon') {
+        document.getElementById('amazonFields').style.display = 'block';
     }
-    
+
     // Create modal without backdrop
     const modalElement = document.getElementById('purchaseModal');
     const modal = new bootstrap.Modal(modalElement, {
@@ -775,24 +1014,28 @@ function showPurchaseModal(itemType, coins, itemName, fieldType) {
         keyboard: true,
         focus: true
     });
-    
+
     // Focus on first input field after modal is shown
     modalElement.addEventListener('shown.bs.modal', function () {
         setTimeout(() => {
-            const firstInput = modalElement.querySelector('input[type="text"], input[type="email"]');
+            const firstInput = modalElement.querySelector('input[type="text"], input[type="email"], input[type="file"]');
             if (firstInput) {
                 firstInput.focus();
             }
         }, 100);
     });
-    
+
     modal.show();
 }
 
 function completePurchase() {
     let additionalInfo = '';
     let isValid = true;
-    
+    const formData = new FormData();
+
+    formData.append('item_type', currentItemType);
+    formData.append('coins', currentCoins);
+
     // Validate and collect information based on field type
     if (currentFieldType === 'ff') {
         const uid = document.getElementById('ffUid').value;
@@ -801,6 +1044,7 @@ function completePurchase() {
             return;
         }
         additionalInfo = `Free Fire UID: ${uid}`;
+        formData.append('additional_info', additionalInfo);
     } else if (currentFieldType === 'kprp') {
         const name = document.getElementById('kprpName').value;
         if (!name.trim()) {
@@ -808,6 +1052,7 @@ function completePurchase() {
             return;
         }
         additionalInfo = `KPRP Name: ${name}`;
+        formData.append('additional_info', additionalInfo);
     } else if (currentFieldType === 'upi') {
         const upiId = document.getElementById('upiId').value;
         if (!upiId.trim()) {
@@ -815,6 +1060,7 @@ function completePurchase() {
             return;
         }
         additionalInfo = `UPI ID: ${upiId}`;
+        formData.append('additional_info', additionalInfo);
     } else if (currentFieldType === 'email') {
         const email = document.getElementById('emailAddress').value;
         if (!email || !email.includes('@')) {
@@ -822,6 +1068,7 @@ function completePurchase() {
             return;
         }
         additionalInfo = `Email: ${email}`;
+        formData.append('additional_info', additionalInfo);
     } else if (currentFieldType === 'pubg') {
         const playerId = document.getElementById('pubgPlayerId').value;
         const email = document.getElementById('pubgEmail').value;
@@ -830,24 +1077,49 @@ function completePurchase() {
             return;
         }
         additionalInfo = `Player ID: ${playerId}, Email: ${email}`;
+        formData.append('additional_info', additionalInfo);
     } else if (currentFieldType === 'kprp_voucher') {
         additionalInfo = 'Auto-generated voucher';
+        formData.append('additional_info', additionalInfo);
+    } else if (currentFieldType === 'google_play') {
+        const code = document.getElementById('googlePlayCode').value;
+        const proof = document.getElementById('googlePlayProof').files[0];
+        if (!code.trim()) {
+            alert('Please enter the Google Play Redeem Code');
+            return;
+        }
+        if (!proof) {
+            alert('Please upload proof of purchase');
+            return;
+        }
+        formData.append('google_play_code', code);
+        formData.append('google_play_proof', proof);
+    } else if (currentFieldType === 'amazon') {
+        const code = document.getElementById('amazonCode').value;
+        const proof = document.getElementById('amazonProof').files[0];
+        if (!code.trim()) {
+            alert('Please enter the Amazon Redeem Code');
+            return;
+        }
+        if (!proof) {
+            alert('Please upload proof of purchase');
+            return;
+        }
+        formData.append('amazon_code', code);
+        formData.append('amazon_proof', proof);
     }
-    
+
     // Make purchase request
     fetch('/purchase', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `item_type=${currentItemType}&coins=${currentCoins}&additional_info=${encodeURIComponent(additionalInfo)}`
+        body: formData
     })
     .then(response => response.json())
     .then(data => {
         // Hide purchase modal
         const purchaseModal = bootstrap.Modal.getInstance(document.getElementById('purchaseModal'));
         purchaseModal.hide();
-        
+
         if (data.success) {
             // Show success modal
             document.getElementById('orderIdDisplay').textContent = data.order_id;

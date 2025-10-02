@@ -36,6 +36,19 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6><i class="fas fa-user-minus"></i> User Management</h6>
+                            </div>
+                            <div class="card-body">
+                                <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#deleteUserModal">
+                                    <i class="fas fa-trash"></i> Delete User
+                                </button>
+                                <div class="form-text mt-2">Permanently remove a user from the database</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <h5>Recent Orders</h5>
@@ -78,8 +91,12 @@
                                             <i class="fas fa-check"></i> Approve
                                         </button>
                                     {% elif purchase.status == 'approved' %}
-                                        {% if 'google_play' in purchase.store_type or 'amazon' in purchase.store_type or 'upi' in purchase.store_type %}
-                                            <button class="btn btn-success btn-sm" onclick="showCodeModal('{{ purchase.id }}', '{{ purchase.item_name }}', '{{ purchase.voucher_code }}')">
+                                        {% if 'upi' in purchase.item_name.lower() %}
+                                            <button class="btn btn-success btn-sm" onclick="showUpiProofModal('{{ purchase.id }}', '{{ purchase.item_name }}', '{{ purchase.proof_image or '' }}')">
+                                                <i class="fas fa-image"></i> View Proof & Complete
+                                            </button>
+                                        {% elif 'google_play' in purchase.item_name or 'amazon' in purchase.item_name.lower() %}
+                                            <button class="btn btn-success btn-sm" onclick="showCodeModal('{{ purchase.id }}', '{{ purchase.item_name }}', '{{ purchase.voucher_code }}', '{{ purchase.proof_image or '' }}')">
                                                 <i class="fas fa-key"></i> Add Code & Complete
                                             </button>
                                         {% else %}
@@ -108,8 +125,8 @@
 </div>
 
 <!-- Admin Code Modal -->
-<div class="modal fade" id="codeModal" tabindex="-1" aria-labelledby="codeModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+<div class="modal fade" id="codeModal" tabindex="-1" aria-labelledby="codeModalLabel" aria-hidden="true" data-bs-backdrop="false">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="codeModalLabel">Complete Order with Code</h5>
@@ -120,16 +137,86 @@
                 <div id="voucherCodeDisplay" style="display: none;">
                     <p>Auto-generated Voucher Code: <strong id="voucherCodeText"></strong></p>
                 </div>
+                <div id="proofImageDisplay" style="display: none;" class="mb-3">
+                    <label class="form-label">Payment Proof:</label>
+                    <div>
+                        <img id="proofImage" src="" alt="Payment Proof" style="max-width: 100%; max-height: 300px;" class="img-thumbnail">
+                    </div>
+                </div>
                 <div class="mb-3">
                     <label for="adminCode" class="form-label">Enter Code/Key:</label>
-                    <input type="text" class="form-control" id="adminCode" placeholder="Enter redeem code or key">
-                    <div class="form-text">For Google Play codes, voucher keys, etc.</div>
+                    <input type="text" class="form-control" id="adminCode" placeholder="Enter redeem code or key" autocomplete="off">
+                    <div class="form-text">For Google Play codes, Amazon vouchers, UPI transaction IDs, etc.</div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-success" onclick="completeOrderWithCode()">
                     <i class="fas fa-check"></i> Complete Order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- UPI Proof Upload Modal -->
+<div class="modal fade" id="upiProofModal" tabindex="-1" aria-labelledby="upiProofModalLabel" aria-hidden="true" data-bs-backdrop="false">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="upiProofModalLabel">Complete UPI Transfer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Order: <strong id="upiOrderItemName"></strong></p>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    Upload proof that you have transferred money to the user's UPI ID
+                </div>
+                <form id="upiProofForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="upiTransferProof" class="form-label">Upload Transfer Proof <span class="text-danger">*</span></label>
+                        <input type="file" class="form-control" id="upiTransferProof" name="transfer_proof" accept="image/*" required>
+                        <div class="form-text">Upload a screenshot of the UPI transfer confirmation</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="completeUpiOrderWithProof()">
+                    <i class="fas fa-check"></i> Complete Order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete User Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true" data-bs-backdrop="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteUserModalLabel">Delete User</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Warning:</strong> This action cannot be undone. This will permanently delete the user and all their data.
+                </div>
+                <div class="mb-3">
+                    <label for="deleteUsername" class="form-label">Username to Delete</label>
+                    <input type="text" class="form-control" id="deleteUsername" placeholder="Enter username to delete" autocomplete="off">
+                </div>
+                <div class="mb-3">
+                    <label for="confirmDelete" class="form-label">Type "DELETE" to confirm</label>
+                    <input type="text" class="form-control" id="confirmDelete" placeholder="Type DELETE to confirm" autocomplete="off">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeleteUser()" id="confirmDeleteBtn" disabled>
+                    <i class="fas fa-trash"></i> Delete User
                 </button>
             </div>
         </div>
@@ -160,21 +247,37 @@ function updateStatus(purchaseId, newStatus) {
     });
 }
 
-function showCodeModal(purchaseId, itemName, voucherCode) {
+function showCodeModal(purchaseId, itemName, voucherCode, proofImage) {
     document.getElementById('orderItemName').innerText = itemName;
     document.getElementById('codeModal').dataset.purchaseId = purchaseId;
 
     if (voucherCode) {
         document.getElementById('voucherCodeText').innerText = voucherCode;
         document.getElementById('voucherCodeDisplay').style.display = 'block';
-        document.getElementById('adminCode').value = voucherCode; // Pre-fill if already has a code
+        document.getElementById('adminCode').value = voucherCode;
     } else {
         document.getElementById('voucherCodeDisplay').style.display = 'none';
-        document.getElementById('adminCode').value = ''; // Clear if no voucher code
+        document.getElementById('adminCode').value = '';
     }
 
-    const modal = new bootstrap.Modal(document.getElementById('codeModal'));
+    if (proofImage) {
+        document.getElementById('proofImage').src = proofImage;
+        document.getElementById('proofImageDisplay').style.display = 'block';
+    } else {
+        document.getElementById('proofImageDisplay').style.display = 'none';
+    }
+
+    // Show modal using Bootstrap's data attributes without backdrop
+    const modal = new bootstrap.Modal(document.getElementById('codeModal'), {
+        backdrop: false,
+        keyboard: true
+    });
     modal.show();
+    
+    // Focus on input after modal is shown
+    document.getElementById('codeModal').addEventListener('shown.bs.modal', function () {
+        document.getElementById('adminCode').focus();
+    }, { once: true });
 }
 
 function completeOrderWithCode() {
@@ -207,6 +310,116 @@ function completeOrderWithCode() {
     });
 }
 
+function showUpiProofModal(purchaseId, itemName, proofImage) {
+    document.getElementById('upiOrderItemName').innerText = itemName;
+    document.getElementById('upiProofModal').dataset.purchaseId = purchaseId;
+    
+    // Reset the form
+    document.getElementById('upiProofForm').reset();
+
+    // Show modal using Bootstrap
+    const modal = new bootstrap.Modal(document.getElementById('upiProofModal'), {
+        backdrop: false,
+        keyboard: true
+    });
+    modal.show();
+}
+
+function completeUpiOrderWithProof() {
+    const purchaseId = document.getElementById('upiProofModal').dataset.purchaseId;
+    const fileInput = document.getElementById('upiTransferProof');
+    
+    if (!fileInput.files[0]) {
+        alert('Please upload transfer proof image.');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('purchase_id', purchaseId);
+    formData.append('transfer_proof', fileInput.files[0]);
+
+    fetch('/complete_upi_transfer', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error completing order: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred');
+    });
+}
+
+
+// Delete user confirmation logic
+document.getElementById('confirmDelete').addEventListener('input', function() {
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    const deleteUsername = document.getElementById('deleteUsername').value.trim();
+    const confirmText = this.value.trim();
+    
+    if (confirmText === 'DELETE' && deleteUsername.length > 0) {
+        confirmBtn.disabled = false;
+    } else {
+        confirmBtn.disabled = true;
+    }
+});
+
+document.getElementById('deleteUsername').addEventListener('input', function() {
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    const confirmText = document.getElementById('confirmDelete').value.trim();
+    const deleteUsername = this.value.trim();
+    
+    if (confirmText === 'DELETE' && deleteUsername.length > 0) {
+        confirmBtn.disabled = false;
+    } else {
+        confirmBtn.disabled = true;
+    }
+});
+
+function confirmDeleteUser() {
+    const username = document.getElementById('deleteUsername').value.trim();
+    const confirmText = document.getElementById('confirmDelete').value.trim();
+    
+    if (confirmText !== 'DELETE' || !username) {
+        alert('Please fill in all fields correctly.');
+        return;
+    }
+    
+    if (!confirm(`Are you absolutely sure you want to delete user "${username}"? This cannot be undone!`)) {
+        return;
+    }
+    
+    fetch('/delete_user', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `username=${encodeURIComponent(username)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            document.getElementById('deleteUsername').value = '';
+            document.getElementById('confirmDelete').value = '';
+            document.getElementById('confirmDeleteBtn').disabled = true;
+            bootstrap.Modal.getInstance(document.getElementById('deleteUserModal')).hide();
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred');
+    });
+}
 
 document.getElementById('give-coins-form').addEventListener('submit', function(e) {
     e.preventDefault();
