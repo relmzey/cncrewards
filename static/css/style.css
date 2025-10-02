@@ -414,32 +414,62 @@ footer {
 }
 
 /* Modal Fixes */
-.modal {
-    z-index: 1050;
-    background: rgba(0, 0, 0, 0.5) !important;
-}
-
-.modal-dialog {
-    position: relative;
-    margin: auto;
+.modal input:focus,
+.modal textarea:focus {
+    outline: none !important;
+    border-color: #4facfe !important;
+    box-shadow: 0 0 0 0.2rem rgba(79, 172, 254, 0.25) !important;
 }
 
 .modal-content {
-    position: relative;
     background: white;
     border-radius: var(--border-radius);
     box-shadow: var(--card-hover-shadow);
 }
 
 .modal-body .form-control {
-    position: relative;
     background: white !important;
-    z-index: auto;
 }
 
 .modal-body .form-control:focus {
+    border-color: #4facfe !important;
+    box-shadow: 0 0 0 0.2rem rgba(79, 172, 254, 0.25) !important;
+}
+
+/* Completely remove modal backdrop */
+.modal-backdrop,
+.modal-backdrop.fade,
+.modal-backdrop.show {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+/* Fix modal positioning without backdrop */
+.modal {
+    z-index: 1055 !important;
+    background: transparent !important;
+}
+
+.modal.show {
+    background: rgba(0, 0, 0, 0.5) !important;
+}
+
+.modal.show .modal-dialog {
+    transform: none !important;
+}
+
+/* Remove body modal-open class side effects */
+body.modal-open {
+    overflow: auto !important;
+    padding-right: 0 !important;
+}
+
+/* Ensure modal content is properly positioned */
+.modal-dialog {
     position: relative;
-    z-index: auto;
+    margin: auto;
+    pointer-events: auto;
 }
 
 /* Custom Scrollbar */
@@ -778,6 +808,14 @@ footer {
     font-size: 0.85rem;
 }
 
+.activity-status {
+    flex-shrink: 0;
+}
+
+.activity-status .badge {
+    font-size: 0.75rem;
+}
+
 /* Info Card */
 .info-card {
     background: rgba(255, 255, 255, 0.95);
@@ -831,6 +869,18 @@ footer {
     color: #666;
     font-size: 0.9rem;
     line-height: 1.4;
+}
+
+/* Consolidated Stats */
+.stat-icon-small {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
 }
 
 /* Responsive Design */
