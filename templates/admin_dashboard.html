@@ -14,7 +14,7 @@
             </div>
             <div class="card-body">
                 <div class="row mb-4">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="card">
                             <div class="card-header">
                                 <h6><i class="fas fa-coins"></i> Give Coins to User</h6>
@@ -36,7 +36,26 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6><i class="fas fa-ticket-alt"></i> KPRP Voucher Validator</h6>
+                            </div>
+                            <div class="card-body">
+                                <form id="validate-voucher-form">
+                                    <div class="mb-3">
+                                        <label for="voucherCode" class="form-label">Voucher Code</label>
+                                        <input type="text" class="form-control" id="voucherCode" name="voucherCode" placeholder="Enter 16-character code" maxlength="16" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-check"></i> Validate
+                                    </button>
+                                </form>
+                                <div id="validationResult" class="mt-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
                         <div class="card">
                             <div class="card-header">
                                 <h6><i class="fas fa-user-minus"></i> User Management</h6>
@@ -144,9 +163,9 @@
                     </div>
                 </div>
                 <div class="mb-3">
-                    <label for="adminCode" class="form-label">Enter Code/Key:</label>
-                    <input type="text" class="form-control" id="adminCode" placeholder="Enter redeem code or key" autocomplete="off">
-                    <div class="form-text">For Google Play codes, Amazon vouchers, UPI transaction IDs, etc.</div>
+                    <label for="adminCode" class="form-label">Enter Code/Key/Likes Count:</label>
+                    <input type="text" class="form-control" id="adminCode" placeholder="Enter code, key, or likes count" autocomplete="off">
+                    <div class="form-text">For vouchers enter code (e.g., AMAZON_LOL), for likes enter count (e.g., 67 likes)</div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -451,6 +470,54 @@ document.getElementById('give-coins-form').addEventListener('submit', function(e
     .catch(error => {
         console.error('Error:', error);
         alert('An error occurred');
+    });
+});
+
+document.getElementById('validate-voucher-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const voucherCode = document.getElementById('voucherCode').value.trim();
+    const resultDiv = document.getElementById('validationResult');
+    
+    resultDiv.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div> Validating...';
+    
+    fetch('/validate_voucher', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `voucher_code=${encodeURIComponent(voucherCode)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.valid) {
+            resultDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <strong><i class="fas fa-check-circle"></i> ${data.message}</strong>
+                    <hr>
+                    <p class="mb-1"><strong>Voucher:</strong> ${data.details.voucher_code}</p>
+                    <p class="mb-1"><strong>Item:</strong> ${data.details.item_name}</p>
+                    <p class="mb-1"><strong>User:</strong> ${data.details.username}</p>
+                    <p class="mb-1"><strong>Status:</strong> ${data.details.status}</p>
+                    <p class="mb-1"><strong>Created:</strong> ${data.details.created_at}</p>
+                    <p class="mb-0"><strong>Order ID:</strong> #${data.details.order_id}</p>
+                </div>
+            `;
+        } else {
+            resultDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <strong><i class="fas fa-times-circle"></i> ${data.message || 'Invalid voucher code'}</strong>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        resultDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <strong><i class="fas fa-exclamation-triangle"></i> Error validating voucher</strong>
+            </div>
+        `;
     });
 });
 </script>
