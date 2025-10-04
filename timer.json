@@ -1,53 +1,54 @@
+
 {
   "links": {
     "Nano link": {
       "coins": 1,
-      "timer_minutes": 1,
-      "api_url": "https://nanolinks.in/api?api=0c13fbfc8c14cb0fa4443a6558f2ac732be8018a&url={destination}&alias={alias}",
-      "display_name": "Easy Coin"
+      "timer_minutes": 0.67,
+      "api_url": "https://nanolinks.in/api?api=0c13fbfc8c14cb0fa4443a6558f2ac732be8018a&url={destination}",
+      "display_name": "Crystal Task"
     },
     "Adrino": {
       "coins": 2,
-      "timer_minutes": 2,
-      "api_url": "https://adrinolinks.in/api?api=8e4ec0284c2d2ff8d0c15da3d38e4590a3c7810f&url={destination}&alias={alias}",
-      "display_name": "Quick Earn"
+      "timer_minutes": 0.83,
+      "api_url": "https://adrinolinks.in/api?api=8e4ec0284c2d2ff8d0c15da3d38e4590a3c7810f&url={destination}",
+      "display_name": "Alpha Task"
     },
     "Linkpay": {
       "coins": 8,
-      "timer_minutes": 5,
-      "api_url": "https://linkpays.in/api?api=af42ed114fc5cd3061b718e37e0739bfd994910e&url={destination}&alias={alias}",
-      "display_name": "Big Coins"
+      "timer_minutes": 2,
+      "api_url": "https://linkpays.in/api?api=af42ed114fc5cd3061b718e37e0739bfd994910e&url={destination}",
+      "display_name": "Zen Task"
     },
-    "Linkmint": {
-      "coins": 4,
-      "timer_minutes": 3,
-      "api_url": "https://linkmint.in/api?api=f9b6bcfc3800b8c8038c3dc36bc6f02be8d82bf8&url={destination}&alias={alias}",
-      "display_name": "Medium Reward"
+    "Urlshortx": {
+      "coins": 5,
+      "timer_minutes": 2,
+      "api_url": "https://urlshortx.com/api?api=1495b698bfde60178db5fe196c0da242b0dd0764&url={destination}",
+      "display_name": "Lynx Task"
     },
     "Earnlinks": {
       "coins": 9,
-      "timer_minutes": 6,
-      "api_url": "https://earnlinks.in/api?api=3c87a771418f41032f8c70c83ba7876dfe741b6b&url={destination}&alias={alias}",
-      "display_name": "High Reward"
+      "timer_minutes": 2,
+      "api_url": "https://earnlinks.in/api?api=3c87a771418f41032f8c70c83ba7876dfe741b6b&url={destination}",
+      "display_name": "Nova Quest"
     },
-    "Crlinks": {
-      "coins": 5,
-      "timer_minutes": 4,
-      "api_url": "https://crlinks.in/api?api=cbb4d6602a3d88e9610a468c7cef19e06ffd2820&url={destination}&alias={alias}",
-      "display_name": "CR Coins"
-    },
-    "Vplinks": {
-      "coins": 6,
-      "timer_minutes": 4,
-      "api_url": "https://vplink.in/api?api=ff416465a1b67f63e86cf0cf6a5880ca95edadcb&url={destination}&alias={alias}",
-      "display_name": "VP Reward"
+    "Linkmint": {
+      "coins": 4,
+      "timer_minutes": 2,
+      "api_url": "https://linkmint.in/api?api=f9b6bcfc3800b8c8038c3dc36bc6f02be8d82bf8&url={destination}",
+      "display_name": "Lumen Task"
     },
     "Arolink": {
       "coins": 10,
-      "timer_minutes": 8,
-      "api_url": "https://arolinks.com/api?api=32a2fc95a2758eb16d5c8d684c1aae598cc4dc84&url={destination}&alias={alias}",
-      "display_name": "Max Coins"
+      "timer_minutes": 2,
+      "api_url": "https://arolinks.com/api?api=32a2fc95a2758eb16d5c8d684c1aae598cc4dc84&url={destination}",
+      "display_name": "Spark Task"
+    },
+    "Vplink": {
+      "coins": 10,
+      "timer_minutes": 2,
+      "api_url": "https://vplink.in/api?api=ff416465a1b67f63e86cf0cf6a5880ca95edadcb&url={destination}",
+      "display_name": "Wayne Quest"
     }
   },
-  "route_generation_hours": 3
+  "route_generation_hours": 2
 }
