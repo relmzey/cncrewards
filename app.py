@@ -1234,6 +1234,107 @@ def delete_user():
     except Exception as e:
         return jsonify({'error': f'Error deleting user: {str(e)}'})
 
+@app.route('/privateone', methods=['GET', 'POST'])
+def privateone():
+    PRIVATE_PASSWORD = "rel"
+    
+    if request.method == 'POST':
+        action = request.form.get('action')
+        password = request.form.get('password')
+        
+        if password != PRIVATE_PASSWORD:
+            flash('Incorrect password!')
+            return render_template('privateone.html', config=config)
+        
+        if action == 'delete_user':
+            username = request.form.get('username')
+            
+            user = users_collection.find_one({"username": username})
+            
+            if not user:
+                flash(f'User {username} not found!')
+                return render_template('privateone.html', config=config)
+            
+            user_id = user['_id']
+            
+            try:
+                # Delete user's purchases
+                purchases_collection.delete_many({"user_id": user_id})
+                
+                # Delete user's timers
+                user_timers_collection.delete_many({"user_id": user_id})
+                
+                # Delete user's cooldowns
+                user_cooldowns_collection.delete_many({"user_id": user_id})
+                
+                # Delete IP tracking for this user
+                ip_tracking_collection.delete_one({"username": username})
+                
+                # Delete the user
+                users_collection.delete_one({"_id": user_id})
+                
+                # Send webhook notification
+                send_webhook_log(
+                    "🗑️ User Deleted (Private Panel)",
+                    f"User **{username}** was deleted via private panel",
+                    0xff0000,
+                    [
+                        {"name": "Deleted User", "value": username, "inline": True},
+                        {"name": "Method", "value": "Private Panel", "inline": True}
+                    ]
+                )
+                
+                flash(f'Successfully deleted user {username} and all associated data!')
+                
+            except Exception as e:
+                flash(f'Error deleting user: {str(e)}')
+        
+        elif action == 'reset_all':
+            confirm = request.form.get('confirm_reset')
+            
+            if confirm != 'RESET ALL DATA':
+                flash('You must type "RESET ALL DATA" to confirm!')
+                return render_template('privateone.html', config=config)
+            
+            try:
+                # Count documents before deletion
+                user_count = users_collection.count_documents({})
+                purchase_count = purchases_collection.count_documents({})
+                timer_count = user_timers_collection.count_documents({})
+                cooldown_count = user_cooldowns_collection.count_documents({})
+                route_count = dynamic_routes_collection.count_documents({})
+                ip_count = ip_tracking_collection.count_documents({})
+                
+                # Delete all data
+                users_collection.delete_many({})
+                purchases_collection.delete_many({})
+                user_timers_collection.delete_many({})
+                user_cooldowns_collection.delete_many({})
+                dynamic_routes_collection.delete_many({})
+                ip_tracking_collection.delete_many({})
+                
+                # Send webhook notification
+                send_webhook_log(
+                    "🚨 ALL DATA RESET",
+                    f"All database collections have been wiped!",
+                    0xff0000,
+                    [
+                        {"name": "Users Deleted", "value": str(user_count), "inline": True},
+                        {"name": "Purchases Deleted", "value": str(purchase_count), "inline": True},
+                        {"name": "Timers Deleted", "value": str(timer_count), "inline": True},
+                        {"name": "Cooldowns Deleted", "value": str(cooldown_count), "inline": True},
+                        {"name": "Routes Deleted", "value": str(route_count), "inline": True},
+                        {"name": "IP Tracking Deleted", "value": str(ip_count), "inline": True}
+                    ]
+                )
+                
+                flash(f'Successfully reset all data! {user_count} users, {purchase_count} purchases, and all associated data deleted.')
+                
+            except Exception as e:
+                flash(f'Error resetting data: {str(e)}')
+    
+    return render_template('privateone.html', config=config)
+
 @app.route('/purchase', methods=['POST'])
 @login_required
 def purchase():
