@@ -816,8 +816,40 @@
     </div>
 </div>
 
+<!-- Insufficient Funds Modal -->
+<div class="modal fade" id="insufficientFundsModal" tabindex="-1" aria-labelledby="insufficientFundsModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="insufficientFundsModalLabel">
+                    <i class="fas fa-exclamation-triangle"></i> Insufficient Funds
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-wallet text-danger" style="font-size: 3rem;"></i>
+                </div>
+                <h4>Not Enough Coins!</h4>
+                <div class="alert alert-warning">
+                    <p class="mb-2"><strong>Required:</strong> <span id="requiredCoins"></span> coins</p>
+                    <p class="mb-2"><strong>Your Balance:</strong> <span id="currentBalance"></span> coins</p>
+                    <p class="mb-0"><strong>Need:</strong> <span id="neededCoins"></span> more coins</p>
+                </div>
+                <p>Please earn more coins to make this purchase.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="{{ url_for('earn_coins') }}" class="btn btn-primary">
+                    <i class="fas fa-coins"></i> Earn Coins
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Success Modal -->
-<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true" data-bs-backdrop="false" data-bs-keyboard="true">
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
@@ -922,7 +954,27 @@ function showPurchaseModal(itemType, coins, itemName, fieldType) {
     modal.show();
 }
 
+let isPurchasing = false;
+
 function completePurchase() {
+    // Check if already processing
+    if (isPurchasing) {
+        return;
+    }
+
+    // Check if user has sufficient balance
+    if ({{ user.balance }} < currentCoins) {
+        const purchaseModal = bootstrap.Modal.getInstance(document.getElementById('purchaseModal'));
+        purchaseModal.hide();
+        
+        const insufficientModal = new bootstrap.Modal(document.getElementById('insufficientFundsModal'));
+        document.getElementById('requiredCoins').textContent = currentCoins;
+        document.getElementById('currentBalance').textContent = {{ user.balance }};
+        document.getElementById('neededCoins').textContent = currentCoins - {{ user.balance }};
+        insufficientModal.show();
+        return;
+    }
+
     let additionalInfo = '';
     const formData = new FormData();
 
@@ -969,6 +1021,12 @@ function completePurchase() {
         formData.append('additional_info', additionalInfo);
     }
 
+    // Set processing flag and disable button
+    isPurchasing = true;
+    const purchaseBtn = document.querySelector('#purchaseModal .modal-footer .btn-primary');
+    purchaseBtn.disabled = true;
+    purchaseBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
+
     fetch('/purchase', {
         method: 'POST',
         body: formData
@@ -991,15 +1049,31 @@ function completePurchase() {
                 document.getElementById('emailMessage').textContent = 'You will receive an email confirmation shortly. You can track your order in the Purchase History section.';
             }
 
-            const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+            const successModal = new bootstrap.Modal(document.getElementById('successModal'), {
+                backdrop: 'static',
+                keyboard: false
+            });
             successModal.show();
+
+            // Re-enable purchases after 3 seconds
+            setTimeout(() => {
+                isPurchasing = false;
+            }, 3000);
         } else {
             alert('Error: ' + data.error);
+            // Re-enable immediately on error
+            isPurchasing = false;
+            purchaseBtn.disabled = false;
+            purchaseBtn.innerHTML = '<i class="fas fa-shopping-cart"></i> Complete Purchase';
         }
     })
     .catch(error => {
         console.error('Error:', error);
         alert('An error occurred while processing your order');
+        // Re-enable immediately on error
+        isPurchasing = false;
+        purchaseBtn.disabled = false;
+        purchaseBtn.innerHTML = '<i class="fas fa-shopping-cart"></i> Complete Purchase';
     });
 }
 
