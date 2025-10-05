@@ -750,9 +750,9 @@
 
                     <div id="likesFields" style="display: none;">
                         <div class="mb-3">
-                            <label for="likesUid" class="form-label">Social Media UID <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="likesUid" name="likesUid" placeholder="Enter your social media UID">
-                            <div class="form-text">Your social media profile UID</div>
+                            <label for="likesUid" class="form-label">Free Fire UID <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="likesUid" name="likesUid" placeholder="Enter your Free Fire UID">
+                            <div class="form-text">Your Free Fire game User ID</div>
                         </div>
                     </div>
 
@@ -772,15 +772,13 @@
                         </div>
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle"></i> <strong>Important:</strong> After your request is confirmed via email, you need to create a support ticket. 
-                            <br><a href="https://later.com" target="_blank" class="text-decoration-none">📺 Watch Tutorial</a>
+                            <br><a href="{{ config.kprp_ticket_tutorial }}" target="_blank" class="text-decoration-none">📺 Watch Tutorial</a>
                         </div>
                     </div>
 
                     <div id="upiFields" style="display: none;">
-                        <div class="mb-3">
-                            <label for="upiId" class="form-label">UPI ID <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="upiId" name="upiId" placeholder="yourname@paytm / yourname@gpay">
-                            <div class="form-text">Your UPI ID for payment transfer</div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> UPI voucher will be sent to your registered email after admin approval.
                         </div>
                     </div>
 
@@ -882,7 +880,6 @@ function showPurchaseModal(itemType, coins, itemName, fieldType) {
     document.getElementById('likesUid').value = '';
     document.getElementById('gamingUid').value = '';
     document.getElementById('kprpName').value = '';
-    document.getElementById('upiId').value = '';
 
     if (fieldType === 'likes') {
         document.getElementById('likesFields').style.display = 'block';
@@ -929,7 +926,7 @@ function completePurchase() {
     if (currentFieldType === 'likes') {
         const uid = document.getElementById('likesUid').value;
         if (!uid.trim()) {
-            alert('Please enter your social media UID');
+            alert('Please enter your Free Fire UID');
             return;
         }
         additionalInfo = `UID: ${uid}`;
@@ -951,12 +948,7 @@ function completePurchase() {
         additionalInfo = `KPRP Name: ${name}`;
         formData.append('additional_info', additionalInfo);
     } else if (currentFieldType === 'upi') {
-        const upiId = document.getElementById('upiId').value;
-        if (!upiId.trim()) {
-            alert('Please enter your UPI ID');
-            return;
-        }
-        additionalInfo = `UPI ID: ${upiId}`;
+        additionalInfo = 'Pending admin approval';
         formData.append('additional_info', additionalInfo);
     } else if (currentFieldType === 'kprp_voucher') {
         additionalInfo = 'Auto-generated voucher';
@@ -980,7 +972,7 @@ function completePurchase() {
 
             if (currentFieldType === 'kprp_voucher') {
                 document.getElementById('successMessage').textContent = 'Your KPRP voucher has been generated!';
-                document.getElementById('statusMessage').innerHTML = '<strong>Status:</strong> Completed ✅<br><strong>Voucher Code:</strong> ' + data.voucher_code;
+                document.getElementById('statusMessage').innerHTML = '<strong>Status:</strong> Completed ✅';
                 document.getElementById('emailMessage').textContent = 'Check your email for your 16-character voucher code!';
             } else {
                 document.getElementById('successMessage').textContent = 'Your order has been placed successfully.';
