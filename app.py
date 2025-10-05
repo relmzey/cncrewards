@@ -26,6 +26,9 @@ with open('timer.json', 'r') as f:
 with open('links.json', 'r') as f:
     links_config = json.load(f)
 
+with open('earntuto.json', 'r') as f:
+    earntuto_config = json.load(f)
+
 with open('access.json', 'r') as f:
     access_config = json.load(f)
 
@@ -312,10 +315,11 @@ YouTube: {config['youtube_channel']}
                 print(f"Webhook error (non-critical): {e}")
             
             if email_sent:
-                flash('Registration successful! Please check your email for verification code.')
+                flash('Registration successful! Please check your email for verification code.', 'success')
             else:
-                flash('Registration successful! However, email could not be sent. Please contact support for verification code.')
+                flash('Registration successful! However, email could not be sent. Please contact support for verification code.', 'warning')
             
+            session['pending_verification_email'] = email
             return redirect(url_for('verify_email', email=email))
             
         except Exception as e:
@@ -348,11 +352,52 @@ def verify_code():
         user_obj = User(user_data['_id'], user_data['username'], user_data['email'], 
                        user_data['balance'], user_data['is_verified'])
         login_user(user_obj)
-        flash('Email verified successfully! Welcome to your dashboard.')
+        flash('Email verified successfully! Welcome to your dashboard.', 'success')
         return redirect(url_for('dashboard'))
     else:
-        flash('Invalid verification code!')
+        flash('Invalid verification code!', 'danger')
         return redirect(url_for('verify_email', email=email))
+
+@app.route('/resend_verification/<email>')
+def resend_verification(email):
+    user = users_collection.find_one({"email": email})
+    
+    if not user:
+        flash('Email not found!', 'danger')
+        return redirect(url_for('login'))
+    
+    if user.get('is_verified'):
+        flash('Email already verified!', 'info')
+        return redirect(url_for('login'))
+    
+    # Generate new verification code
+    verification_code = generate_code()
+    users_collection.update_one(
+        {"email": email},
+        {"$set": {"verification_code": verification_code}}
+    )
+    
+    # Send verification email
+    subject = f"New Verification Code - {config['app_name']}"
+    content = f"""
+Dear {user['username']},
+
+Here is your new verification code:
+
+Verification Code: {verification_code}
+
+Please use this code to verify your email.
+
+Best regards,
+The {config['app_name']} Team
+    """
+    
+    if send_email(email, subject, content):
+        flash('A new verification code has been sent to your email!', 'success')
+    else:
+        flash('Failed to send verification code. Please try again later.', 'danger')
+    
+    return redirect(url_for('verify_email', email=email))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -390,9 +435,33 @@ def login():
                 
                 return redirect(url_for('dashboard'))
             else:
-                flash('Please verify your email first!')
+                # Generate new verification code
+                verification_code = generate_code()
+                users_collection.update_one(
+                    {"_id": user_data['_id']},
+                    {"$set": {"verification_code": verification_code}}
+                )
+                
+                # Send verification email
+                subject = f"Email Verification Code - {config['app_name']}"
+                content = f"""
+Dear {username},
+
+Your email is not verified yet. Here is your verification code:
+
+Verification Code: {verification_code}
+
+Please use this code to verify your email and access your account.
+
+Best regards,
+The {config['app_name']} Team
+                """
+                send_email(user_data['email'], subject, content)
+                
+                flash('Email not verified! A new verification code has been sent to your email.', 'warning')
+                return redirect(url_for('verify_email', email=user_data['email']))
         else:
-            flash('Invalid username or password!')
+            flash('Invalid username or password!', 'danger')
 
     return render_template('login.html', config=config)
 
@@ -565,6 +634,7 @@ def earn_coins():
                          active_timers=active_timers,
                          link_cooldowns=link_cooldowns,
                          links_config=links_config,
+                         earntuto_config=earntuto_config,
                          config=config)
 
 @app.route('/generate_link/<link_type>')
