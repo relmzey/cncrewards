@@ -1,3 +1,4 @@
+
 import os
 import json
 import random
@@ -60,7 +61,6 @@ users_collection = db.users
 purchases_collection = db.purchases
 dynamic_routes_collection = db.dynamic_routes
 user_timers_collection = db.user_timers
-ip_tracking_collection = db.ip_tracking
 user_cooldowns_collection = db.user_cooldowns
 
 # Webhook URL for logging
@@ -93,7 +93,6 @@ def init_db():
     
     user_cooldowns_collection.create_index("user_id")
     user_cooldowns_collection.create_index([("user_id", 1), ("link_type", 1)])
-    ip_tracking_collection.create_index("ip_address", unique=True)
 
 class User(UserMixin):
     def __init__(self, id, username, email, balance, is_verified):
@@ -111,7 +110,8 @@ def load_user(user_id):
                    user_data['balance'], user_data['is_verified'])
     return None
 
-def generate_code():
+def generate_verification_code():
+    """Generate a 6-digit verification code"""
     return ''.join(random.choices(string.digits, k=6))
 
 def generate_route():
@@ -133,40 +133,122 @@ def send_webhook_log(title, description, color=0x00ff00, fields=None):
     except Exception as e:
         print(f"Webhook error: {e}")
 
-def send_email(to_email, subject, content):
-    """Send email using SMTP (Gmail) - simple alternative to SendGrid"""
+def send_verification_email(email, username, verification_code):
+    """Send verification email using Gmail SMTP"""
     try:
         smtp_server = "smtp.gmail.com"
         smtp_port = 587
         sender_email = "kprprewards@gmail.com"
         sender_password = "gzgg cjes oumt wkpl"
 
-        msg = MIMEMultipart()
+        subject = f"Verify Your {config['app_name']} Account"
+        
+        html_content = f"""
+        <html>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2 style="color: #007bff;">Welcome to {config['app_name']}!</h2>
+                    <p>Hi <strong>{username}</strong>,</p>
+                    <p>Thank you for registering with {config['app_name']}. To complete your registration and verify your email address, please use the verification code below:</p>
+                    
+                    <div style="background-color: #f8f9fa; border-left: 4px solid #007bff; padding: 15px; margin: 20px 0;">
+                        <p style="margin: 0; font-size: 14px; color: #666;">Your Verification Code:</p>
+                        <p style="margin: 10px 0 0 0; font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #007bff;">{verification_code}</p>
+                    </div>
+                    
+                    <p>This code will expire in 15 minutes for security reasons.</p>
+                    
+                    <p>If you didn't create an account with {config['app_name']}, please ignore this email.</p>
+                    
+                    <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+                    
+                    <p style="font-size: 12px; color: #666;">
+                        Best regards,<br>
+                        The {config['app_name']} Team<br>
+                        Created by {config['created_by']}
+                    </p>
+                </div>
+            </body>
+        </html>
+        """
+
+        msg = MIMEMultipart('alternative')
         msg['From'] = sender_email
-        msg['To'] = to_email
+        msg['To'] = email
         msg['Subject'] = subject
 
-        msg.attach(MIMEText(content, 'plain'))
+        msg.attach(MIMEText(html_content, 'html'))
 
         server = smtplib.SMTP(smtp_server, smtp_port)
         server.starttls()
         server.login(sender_email, sender_password)
-        text = msg.as_string()
-        server.sendmail(sender_email, to_email, text)
+        server.sendmail(sender_email, email, msg.as_string())
         server.quit()
 
-        print(f"Email sent successfully to {to_email}")
+        print(f"✅ Verification email sent successfully to {email}")
         return True
 
     except Exception as e:
-        print(f"Error sending email: {e}")
+        print(f"❌ Error sending verification email: {e}")
         return False
 
-def send_webhook(webhook_url, data):
+def send_password_reset_email(email, username, reset_code):
+    """Send password reset email"""
     try:
-        requests.post(webhook_url, json=data)
+        smtp_server = "smtp.gmail.com"
+        smtp_port = 587
+        sender_email = "kprprewards@gmail.com"
+        sender_password = "gzgg cjes oumt wkpl"
+
+        subject = f"Password Reset - {config['app_name']}"
+        
+        html_content = f"""
+        <html>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2 style="color: #dc3545;">Password Reset Request</h2>
+                    <p>Hi <strong>{username}</strong>,</p>
+                    <p>We received a request to reset your password for your {config['app_name']} account.</p>
+                    
+                    <div style="background-color: #f8f9fa; border-left: 4px solid #dc3545; padding: 15px; margin: 20px 0;">
+                        <p style="margin: 0; font-size: 14px; color: #666;">Your Password Reset Code:</p>
+                        <p style="margin: 10px 0 0 0; font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #dc3545;">{reset_code}</p>
+                    </div>
+                    
+                    <p>This code will expire in 15 minutes for security reasons.</p>
+                    
+                    <p><strong>If you didn't request this password reset, please ignore this email.</strong> Your password will remain unchanged.</p>
+                    
+                    <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+                    
+                    <p style="font-size: 12px; color: #666;">
+                        Best regards,<br>
+                        The {config['app_name']} Team
+                    </p>
+                </div>
+            </body>
+        </html>
+        """
+
+        msg = MIMEMultipart('alternative')
+        msg['From'] = sender_email
+        msg['To'] = email
+        msg['Subject'] = subject
+
+        msg.attach(MIMEText(html_content, 'html'))
+
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.sendmail(sender_email, email, msg.as_string())
+        server.quit()
+
+        print(f"✅ Password reset email sent successfully to {email}")
+        return True
+
     except Exception as e:
-        print(f"Webhook error: {e}")
+        print(f"❌ Error sending password reset email: {e}")
+        return False
 
 def get_device_info(user_agent):
     """Extract device information from user agent"""
@@ -187,7 +269,8 @@ def get_device_info(user_agent):
     else:
         return '🖥️ Unknown Device'
 
-# Routes
+# ============= AUTHENTICATION ROUTES =============
+
 @app.route('/')
 def index():
     if current_user.is_authenticated:
@@ -197,170 +280,129 @@ def index():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        try:
-            username = request.form['username']
-            email = request.form['email']
-            password = request.form['password']
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
 
-            # Get IP address for logging only
-            user_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', 'unknown'))
-            if ',' in user_ip:
-                user_ip = user_ip.split(',')[0].strip()
-
-            user_agent = request.headers.get('User-Agent', 'Unknown')
-            device_info = get_device_info(user_agent)
-
-            # Check if user exists
-            existing_user = users_collection.find_one({"$or": [{"username": username}, {"email": email}]})
-            if existing_user:
-                flash('Username or email already exists!')
-                return render_template('register.html', config=config)
-
-            verification_code = generate_code()
-            password_hash = generate_password_hash(password)
-
-            subject = f"Welcome to {config['app_name']} - Verify Your Account"
-            content = f"""
-Dear {username},
-
-Welcome to {config['app_name']}! We're excited to have you join our community of coin earners.
-
-To complete your account setup and start earning coins, please verify your email address using the code below:
-
-Verification Code: {verification_code}
-
-What you can do next:
-• Complete tasks to earn coins
-• Redeem coins for amazing rewards
-• Track your earnings and purchases
-
-If you didn't create this account, please ignore this email.
-
-Best regards,
-The {config['app_name']} Team
-Created by {config['created_by']}
-YouTube: {config['youtube_channel']}
-            """
-            
-            # Send verification email BEFORE inserting user
-            try:
-                email_sent = send_email(email, subject, content)
-                print(f"Email send attempt to {email}: {'Success' if email_sent else 'Failed'}")
-            except Exception as email_error:
-                print(f"Email sending exception: {email_error}")
-                email_sent = False
-            
-            # Insert user into database
-            try:
-                users_collection.insert_one({
-                    "username": username,
-                    "email": email,
-                    "password_hash": password_hash,
-                    "balance": 0,
-                    "is_verified": False,
-                    "verification_code": verification_code,
-                    "reset_code": None,
-                    "created_at": datetime.now()
-                })
-                print(f"User {username} successfully created in database")
-            except Exception as e:
-                print(f"Database error during user creation: {e}")
-                flash('Registration failed: Database error. Please try again.', 'danger')
-                return render_template('register.html', config=config)
-            
-            # Send webhook for new registration
-            try:
-                send_webhook_log(
-                    "👤 New User Registration",
-                    f"A new user has registered!",
-                    0x00ff00,
-                    [
-                        {"name": "Username", "value": username, "inline": True},
-                        {"name": "Email", "value": email, "inline": True},
-                        {"name": "IP Address", "value": user_ip, "inline": True},
-                        {"name": "Device", "value": device_info, "inline": True},
-                        {"name": "Status", "value": "Pending Email Verification", "inline": True},
-                        {"name": "Email Sent", "value": "✅ Yes" if email_sent else "❌ No", "inline": True}
-                    ]
-                )
-            except Exception as e:
-                print(f"Webhook error (non-critical): {e}")
-            
-            # Store email in session for verification page
-            session['pending_verification_email'] = email
-            session.permanent = True
-            
-            # If email failed, store code in session as fallback
-            if not email_sent:
-                session['pending_verification_code'] = verification_code
-            
-            print(f"Redirecting to verify_email for {email}")
-            
-            if email_sent:
-                flash('Registration successful! Please check your email for the 6-digit verification code.', 'success')
-            else:
-                flash(f'Registration successful! Email delivery failed. Your verification code is: {verification_code}', 'warning')
-            
-            return redirect(url_for('verify_email', email=email))
-            
-        except Exception as e:
-            print(f"Registration error: {e}")
-            import traceback
-            traceback.print_exc()
-            flash('Registration failed: An unexpected error occurred. Please try again.')
+        # Validation
+        if not username or not email or not password:
+            flash('All fields are required!', 'danger')
             return render_template('register.html', config=config)
+
+        # Check if user already exists
+        if users_collection.find_one({"$or": [{"username": username}, {"email": email}]}):
+            flash('Username or email already exists!', 'danger')
+            return render_template('register.html', config=config)
+
+        # Generate verification code
+        verification_code = generate_verification_code()
+        code_expires = datetime.now() + timedelta(minutes=15)
+
+        # Hash password
+        password_hash = generate_password_hash(password)
+
+        # Create user document
+        user_doc = {
+            "username": username,
+            "email": email,
+            "password_hash": password_hash,
+            "balance": 0,
+            "is_verified": False,
+            "verification_code": verification_code,
+            "verification_code_expires": code_expires,
+            "created_at": datetime.now()
+        }
+
+        # Insert user into database
+        try:
+            result = users_collection.insert_one(user_doc)
+            user_id = result.inserted_id
+        except Exception as e:
+            print(f"Database error: {e}")
+            flash('Registration failed. Please try again.', 'danger')
+            return render_template('register.html', config=config)
+
+        # Send verification email
+        email_sent = send_verification_email(email, username, verification_code)
+
+        # Get user info for webhook
+        user_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', 'unknown'))
+        if ',' in user_ip:
+            user_ip = user_ip.split(',')[0].strip()
+        device_info = get_device_info(request.headers.get('User-Agent', 'Unknown'))
+
+        # Send webhook notification
+        send_webhook_log(
+            "👤 New User Registration",
+            f"User **{username}** has registered!",
+            0x00ff00,
+            [
+                {"name": "Username", "value": username, "inline": True},
+                {"name": "Email", "value": email, "inline": True},
+                {"name": "IP Address", "value": user_ip, "inline": True},
+                {"name": "Device", "value": device_info, "inline": True},
+                {"name": "Email Sent", "value": "✅ Yes" if email_sent else "❌ Failed", "inline": True}
+            ]
+        )
+
+        if email_sent:
+            flash(f'Registration successful! Please check your email for the verification code.', 'success')
+        else:
+            flash(f'Registration successful! However, email delivery failed. Your verification code is: {verification_code}', 'warning')
+
+        return redirect(url_for('verify_email', email=email))
 
     return render_template('register.html', config=config)
 
-@app.route('/verify_email/<email>', methods=['GET'])
+@app.route('/verify_email/<email>', methods=['GET', 'POST'])
 def verify_email(email):
-    print(f"verify_email route accessed for: {email}")
+    if request.method == 'POST':
+        code = request.form.get('code', '').strip()
+        
+        user = users_collection.find_one({"email": email})
+        
+        if not user:
+            flash('Invalid email address!', 'danger')
+            return redirect(url_for('login'))
+        
+        if user.get('is_verified'):
+            flash('Email already verified! Please login.', 'info')
+            return redirect(url_for('login'))
+        
+        # Check if code is correct and not expired
+        if user.get('verification_code') == code:
+            if datetime.now() < user.get('verification_code_expires', datetime.now()):
+                # Verify user
+                users_collection.update_one(
+                    {"_id": user['_id']},
+                    {
+                        "$set": {"is_verified": True},
+                        "$unset": {"verification_code": "", "verification_code_expires": ""}
+                    }
+                )
+                
+                # Log user in
+                user_obj = User(user['_id'], user['username'], user['email'], user['balance'], True)
+                login_user(user_obj)
+                
+                flash('Email verified successfully! Welcome to your dashboard.', 'success')
+                return redirect(url_for('dashboard'))
+            else:
+                flash('Verification code has expired! Please request a new one.', 'danger')
+        else:
+            flash('Invalid verification code!', 'danger')
     
-    # Verify the user exists and needs verification
+    # Check if user exists and needs verification
     user = users_collection.find_one({"email": email})
-    
     if not user:
-        print(f"User not found for email: {email}")
         flash('Invalid email address!', 'danger')
         return redirect(url_for('login'))
     
     if user.get('is_verified'):
-        print(f"User already verified: {email}")
         flash('Email already verified! Please login.', 'info')
         return redirect(url_for('login'))
     
-    print(f"Rendering verify_email.html for {email}")
-    
-    # Check if we have the code in session (for cases where email wasn't sent)
-    session_code = session.get('pending_verification_code')
-    
-    return render_template('verify_email.html', 
-                         email=email, 
-                         config=config, 
-                         session_code=session_code)
-
-@app.route('/verify_code', methods=['POST'])
-def verify_code():
-    email = request.form['email']
-    code = request.form['code']
-
-    user = users_collection.find_one({"email": email, "verification_code": code})
-
-    if user:
-        users_collection.update_one(
-            {"email": email},
-            {"$set": {"is_verified": True}, "$unset": {"verification_code": ""}}
-        )
-
-        user_data = users_collection.find_one({"email": email})
-        user_obj = User(user_data['_id'], user_data['username'], user_data['email'], 
-                       user_data['balance'], user_data['is_verified'])
-        login_user(user_obj)
-        flash('Email verified successfully! Welcome to your dashboard.', 'success')
-        return redirect(url_for('dashboard'))
-    else:
-        flash('Invalid verification code!', 'danger')
-        return redirect(url_for('verify_email', email=email))
+    return render_template('verify_email.html', email=email, config=config)
 
 @app.route('/resend_verification/<email>')
 def resend_verification(email):
@@ -375,46 +417,32 @@ def resend_verification(email):
         return redirect(url_for('login'))
     
     # Generate new verification code
-    verification_code = generate_code()
+    verification_code = generate_verification_code()
+    code_expires = datetime.now() + timedelta(minutes=15)
+    
     users_collection.update_one(
-        {"email": email},
-        {"$set": {"verification_code": verification_code}}
+        {"_id": user['_id']},
+        {"$set": {
+            "verification_code": verification_code,
+            "verification_code_expires": code_expires
+        }}
     )
     
     # Send verification email
-    subject = f"New Verification Code - {config['app_name']}"
-    content = f"""
-Dear {user['username']},
-
-Here is your new verification code:
-
-Verification Code: {verification_code}
-
-Please use this code to verify your email.
-
-Best regards,
-The {config['app_name']} Team
-    """
+    email_sent = send_verification_email(email, user['username'], verification_code)
     
-    if send_email(email, subject, content):
+    if email_sent:
         flash('A new verification code has been sent to your email!', 'success')
     else:
-        flash('Failed to send verification code. Please try again later.', 'danger')
+        flash(f'Failed to send email. Your verification code is: {verification_code}', 'warning')
     
     return redirect(url_for('verify_email', email=email))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-
-        user_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', ''))
-        if ',' in user_ip:
-            user_ip = user_ip.split(',')[0].strip()
-
-        user_agent = request.headers.get('User-Agent', 'Unknown')
-        device_info = get_device_info(user_agent)
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
 
         user_data = users_collection.find_one({"username": username})
 
@@ -424,7 +452,13 @@ def login():
                            user_data['balance'], user_data['is_verified'])
                 login_user(user)
                 
-                # Send webhook for successful login
+                # Get user info for webhook
+                user_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', 'unknown'))
+                if ',' in user_ip:
+                    user_ip = user_ip.split(',')[0].strip()
+                device_info = get_device_info(request.headers.get('User-Agent', 'Unknown'))
+                
+                # Send webhook for login
                 send_webhook_log(
                     "🔓 User Login",
                     f"User **{username}** logged in successfully",
@@ -437,49 +471,10 @@ def login():
                     ]
                 )
                 
+                flash('Login successful!', 'success')
                 return redirect(url_for('dashboard'))
             else:
-                # Generate new verification code
-                verification_code = generate_code()
-                users_collection.update_one(
-                    {"_id": user_data['_id']},
-                    {"$set": {"verification_code": verification_code}}
-                )
-                
-                # Send verification email
-                subject = f"Email Verification Code - {config['app_name']}"
-                content = f"""
-Dear {username},
-
-Your email is not verified yet. Here is your verification code:
-
-Verification Code: {verification_code}
-
-Please use this code to verify your email and access your account.
-
-Best regards,
-The {config['app_name']} Team
-                """
-                try:
-                    email_sent = send_email(user_data['email'], subject, content)
-                    print(f"Verification email send result for {user_data['email']}: {email_sent}")
-                except Exception as e:
-                    print(f"Error sending verification email: {e}")
-                    email_sent = False
-                
-                # Store email in session for verification page
-                session['pending_verification_email'] = user_data['email']
-                session.permanent = True
-                
-                # If email failed, store code in session as fallback
-                if not email_sent:
-                    session['pending_verification_code'] = verification_code
-                
-                if email_sent:
-                    flash('Email not verified! A new verification code has been sent to your email.', 'success')
-                else:
-                    flash(f'Email not verified! Email delivery failed. Your verification code is: {verification_code}', 'warning')
-                
+                flash('Please verify your email before logging in.', 'warning')
                 return redirect(url_for('verify_email', email=user_data['email']))
         else:
             flash('Invalid username or password!', 'danger')
@@ -489,79 +484,82 @@ The {config['app_name']} Team
 @app.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
-        email = request.form['email']
+        email = request.form.get('email', '').strip().lower()
 
         user = users_collection.find_one({"email": email})
 
         if user:
-            reset_code = generate_code()
+            # Generate reset code
+            reset_code = generate_verification_code()
+            code_expires = datetime.now() + timedelta(minutes=15)
+            
             users_collection.update_one(
-                {"email": email},
-                {"$set": {"reset_code": reset_code}}
+                {"_id": user['_id']},
+                {"$set": {
+                    "reset_code": reset_code,
+                    "reset_code_expires": code_expires
+                }}
             )
 
-            subject = f"{config['app_name']} - Password Reset Request"
-            content = f"""
-Dear User,
-
-We received a request to reset your password for your {config['app_name']} account.
-
-Password Reset Code: {reset_code}
-
-Please use this code to reset your password. If you didn't request this password reset, please ignore this email and your password will remain unchanged.
-
-For security reasons, this code will expire soon, so please use it promptly.
-
-Best regards,
-The {config['app_name']} Team
-            """
-            send_email(email, subject, content)
-
-            flash('Password reset code sent to your email!')
+            # Send reset email
+            email_sent = send_password_reset_email(email, user['username'], reset_code)
+            
+            if email_sent:
+                flash('Password reset code sent to your email!', 'success')
+            else:
+                flash(f'Email delivery failed. Your reset code is: {reset_code}', 'warning')
+            
             return redirect(url_for('reset_password', email=email))
         else:
-            flash('Email not found!')
+            flash('Email not found!', 'danger')
 
     return render_template('forgot_password.html', config=config)
 
 @app.route('/reset_password/<email>', methods=['GET', 'POST'])
 def reset_password(email):
     if request.method == 'POST':
-        code = request.form['code']
-        new_password = request.form['new_password']
+        code = request.form.get('code', '').strip()
+        new_password = request.form.get('new_password', '')
 
-        user = users_collection.find_one({"email": email, "reset_code": code})
+        user = users_collection.find_one({"email": email})
 
-        if user:
-            password_hash = generate_password_hash(new_password)
-            users_collection.update_one(
-                {"email": email},
-                {"$set": {"password_hash": password_hash}, "$unset": {"reset_code": ""}}
-            )
-            flash('Password reset successfully!')
-            return redirect(url_for('login'))
+        if user and user.get('reset_code') == code:
+            if datetime.now() < user.get('reset_code_expires', datetime.now()):
+                password_hash = generate_password_hash(new_password)
+                users_collection.update_one(
+                    {"_id": user['_id']},
+                    {
+                        "$set": {"password_hash": password_hash},
+                        "$unset": {"reset_code": "", "reset_code_expires": ""}
+                    }
+                )
+                flash('Password reset successfully! Please login.', 'success')
+                return redirect(url_for('login'))
+            else:
+                flash('Reset code has expired!', 'danger')
         else:
-            flash('Invalid reset code!')
+            flash('Invalid reset code!', 'danger')
 
     return render_template('reset_password.html', email=email, config=config)
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('index'))
+
+# ============= DASHBOARD & OTHER ROUTES =============
 
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    # Get user data with creation date
     user_data = users_collection.find_one({"_id": ObjectId(current_user.id)})
-
-    # Get purchase count
     purchase_count = purchases_collection.count_documents({"user_id": ObjectId(current_user.id)})
-
-    # Get recent purchases (last 5)
     recent_purchases_cursor = purchases_collection.find({
         "user_id": ObjectId(current_user.id)
     }).sort("created_at", -1).limit(5)
-
     recent_purchases = list(recent_purchases_cursor)
-
-    # Update current_user object with creation date
     current_user.created_at = user_data.get('created_at')
 
     return render_template('dashboard.html', 
@@ -569,12 +567,6 @@ def dashboard():
                          config=config,
                          purchase_count=purchase_count,
                          recent_purchases=recent_purchases)
-
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect(url_for('index'))
 
 @app.route('/earn_coins')
 @login_required
@@ -1358,9 +1350,6 @@ def privateone():
                 # Delete user's cooldowns
                 user_cooldowns_collection.delete_many({"user_id": user_id})
                 
-                # Delete IP tracking for this user
-                ip_tracking_collection.delete_one({"username": username})
-                
                 # Delete the user
                 users_collection.delete_one({"_id": user_id})
                 
@@ -1394,7 +1383,6 @@ def privateone():
                 timer_count = user_timers_collection.count_documents({})
                 cooldown_count = user_cooldowns_collection.count_documents({})
                 route_count = dynamic_routes_collection.count_documents({})
-                ip_count = ip_tracking_collection.count_documents({})
                 
                 # Delete all data
                 users_collection.delete_many({})
@@ -1402,7 +1390,6 @@ def privateone():
                 user_timers_collection.delete_many({})
                 user_cooldowns_collection.delete_many({})
                 dynamic_routes_collection.delete_many({})
-                ip_tracking_collection.delete_many({})
                 
                 # Send webhook notification
                 send_webhook_log(
@@ -1414,8 +1401,7 @@ def privateone():
                         {"name": "Purchases Deleted", "value": str(purchase_count), "inline": True},
                         {"name": "Timers Deleted", "value": str(timer_count), "inline": True},
                         {"name": "Cooldowns Deleted", "value": str(cooldown_count), "inline": True},
-                        {"name": "Routes Deleted", "value": str(route_count), "inline": True},
-                        {"name": "IP Tracking Deleted", "value": str(ip_count), "inline": True}
+                        {"name": "Routes Deleted", "value": str(route_count), "inline": True}
                     ]
                 )
                 
@@ -1807,7 +1793,35 @@ The {config['app_name']} Team
 
     return jsonify({'success': True})
 
-# Initialize database and start scheduler
+def send_email(to_email, subject, content):
+    """General email sending function"""
+    try:
+        smtp_server = "smtp.gmail.com"
+        smtp_port = 587
+        sender_email = "kprprewards@gmail.com"
+        sender_password = "gzgg cjes oumt wkpl"
+
+        msg = MIMEMultipart()
+        msg['From'] = sender_email
+        msg['To'] = to_email
+        msg['Subject'] = subject
+
+        msg.attach(MIMEText(content, 'plain'))
+
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.sendmail(sender_email, to_email, msg.as_string())
+        server.quit()
+
+        print(f"✅ Email sent successfully to {to_email}")
+        return True
+
+    except Exception as e:
+        print(f"❌ Error sending email: {e}")
+        return False
+
+# Initialize database and start app
 if __name__ == '__main__':
     init_db()
     app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
