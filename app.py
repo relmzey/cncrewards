@@ -165,6 +165,25 @@ def send_webhook(webhook_url, data):
     except Exception as e:
         print(f"Webhook error: {e}")
 
+def get_device_info(user_agent):
+    """Extract device information from user agent"""
+    ua = user_agent.lower()
+    if 'mobile' in ua or 'android' in ua or 'iphone' in ua:
+        if 'android' in ua:
+            return '📱 Android Mobile'
+        elif 'iphone' in ua or 'ipad' in ua:
+            return '📱 iOS Mobile'
+        else:
+            return '📱 Mobile Device'
+    elif 'windows' in ua:
+        return '💻 Windows PC'
+    elif 'mac' in ua:
+        return '💻 Mac'
+    elif 'linux' in ua:
+        return '💻 Linux'
+    else:
+        return '🖥️ Unknown Device'
+
 # Routes
 @app.route('/')
 def index():
@@ -183,13 +202,30 @@ def register():
         if ',' in user_ip:
             user_ip = user_ip.split(',')[0].strip()
 
+        user_agent = request.headers.get('User-Agent', 'Unknown')
+        device_info = get_device_info(user_agent)
+
         # Check if user exists
         if users_collection.find_one({"$or": [{"username": username}, {"email": email}]}):
             flash('Username or email already exists!')
             return render_template('register.html', config=config)
 
         # Check if IP already has an account
-        if ip_tracking_collection.find_one({"ip_address": user_ip}):
+        existing_ip = ip_tracking_collection.find_one({"ip_address": user_ip})
+        if existing_ip:
+            # Send webhook for alt account attempt
+            send_webhook_log(
+                "🚨 Alt Account Attempt Detected",
+                f"Someone tried to create another account from an existing IP",
+                0xff0000,
+                [
+                    {"name": "Attempted Username", "value": username, "inline": True},
+                    {"name": "Attempted Email", "value": email, "inline": True},
+                    {"name": "IP Address", "value": user_ip, "inline": True},
+                    {"name": "Device", "value": device_info, "inline": False},
+                    {"name": "Original Account Created", "value": existing_ip['account_created_at'].strftime('%Y-%m-%d %H:%M:%S'), "inline": True}
+                ]
+            )
             flash('Only one account per IP address is allowed!')
             return render_template('register.html', config=config)
 
@@ -233,8 +269,24 @@ YouTube: {config['youtube_channel']}
             })
             ip_tracking_collection.insert_one({
                 "ip_address": user_ip,
+                "username": username,
                 "account_created_at": datetime.now()
             })
+            
+            # Send webhook for new registration
+            send_webhook_log(
+                "👤 New User Registration",
+                f"A new user has registered!",
+                0x00ff00,
+                [
+                    {"name": "Username", "value": username, "inline": True},
+                    {"name": "Email", "value": email, "inline": True},
+                    {"name": "IP Address", "value": user_ip, "inline": True},
+                    {"name": "Device", "value": device_info, "inline": True},
+                    {"name": "Status", "value": "Pending Email Verification", "inline": True}
+                ]
+            )
+            
             flash('Registration successful! Please check your email for verification code.')
             return redirect(url_for('verify_email', email=email))
         else:
@@ -276,6 +328,13 @@ def login():
         username = request.form['username']
         password = request.form['password']
 
+        user_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', ''))
+        if ',' in user_ip:
+            user_ip = user_ip.split(',')[0].strip()
+
+        user_agent = request.headers.get('User-Agent', 'Unknown')
+        device_info = get_device_info(user_agent)
+
         user_data = users_collection.find_one({"username": username})
 
         if user_data and check_password_hash(user_data['password_hash'], password):
@@ -283,6 +342,20 @@ def login():
                 user = User(user_data['_id'], user_data['username'], user_data['email'], 
                            user_data['balance'], user_data['is_verified'])
                 login_user(user)
+                
+                # Send webhook for successful login
+                send_webhook_log(
+                    "🔓 User Login",
+                    f"User **{username}** logged in successfully",
+                    0x3498db,
+                    [
+                        {"name": "Username", "value": username, "inline": True},
+                        {"name": "Balance", "value": f"{user_data['balance']} coins", "inline": True},
+                        {"name": "IP Address", "value": user_ip, "inline": True},
+                        {"name": "Device", "value": device_info, "inline": True}
+                    ]
+                )
+                
                 return redirect(url_for('dashboard'))
             else:
                 flash('Please verify your email first!')
@@ -562,6 +635,11 @@ def claim_coins(route_path):
     if not current_user.is_authenticated:
         return redirect(url_for('login'))
 
+    arrival_time = datetime.now()
+    user_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', ''))
+    if ',' in user_ip:
+        user_ip = user_ip.split(',')[0].strip()
+
     # Check if route is valid and not expired
     route_data = dynamic_routes_collection.find_one({
         "route_path": route_path,
@@ -581,7 +659,23 @@ def claim_coins(route_path):
     })
 
     if not active_timer:
+        # Log bypass attempt
+        send_webhook_log(
+            "⚠️ Bypass Attempt Detected",
+            f"User **{current_user.username}** tried to access reward route without valid timer",
+            0xff6600,
+            [
+                {"name": "User", "value": current_user.username, "inline": True},
+                {"name": "Link Type", "value": link_type, "inline": True},
+                {"name": "IP Address", "value": user_ip, "inline": True},
+                {"name": "Route", "value": route_path, "inline": True}
+            ]
+        )
         return render_template('access_denied.html', message="Bypass detected", config=config)
+    
+    # Log arrival time
+    timer_start = active_timer.get('timer_start')
+    time_taken = (arrival_time - timer_start).total_seconds() if timer_start else 0
 
     # Check if timer has expired (2 minutes passed)
     timer_start = active_timer.get('timer_start')
@@ -615,7 +709,12 @@ def claim_coins(route_path):
         upsert=True
     )
 
-    # Send webhook notification for link completion
+    # Format time taken
+    minutes_taken = int(time_taken // 60)
+    seconds_taken = int(time_taken % 60)
+    time_display = f"{minutes_taken}m {seconds_taken}s"
+
+    # Send webhook notification for link completion with arrival time
     send_webhook_log(
         "🎯 Link Completed",
         f"User **{current_user.username}** completed a link and earned {coins_to_award} coins!",
@@ -623,7 +722,10 @@ def claim_coins(route_path):
         [
             {"name": "User", "value": current_user.username, "inline": True},
             {"name": "Link Type", "value": link_type, "inline": True},
-            {"name": "Coins Earned", "value": str(coins_to_award), "inline": True}
+            {"name": "Coins Earned", "value": str(coins_to_award), "inline": True},
+            {"name": "Time Taken", "value": time_display, "inline": True},
+            {"name": "Arrival Time", "value": arrival_time.strftime('%H:%M:%S'), "inline": True},
+            {"name": "IP Address", "value": user_ip, "inline": True}
         ]
     )
 
@@ -1484,4 +1586,4 @@ The {config['app_name']} Team
 # Initialize database and start scheduler
 if __name__ == '__main__':
     init_db()
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
