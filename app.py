@@ -138,8 +138,12 @@ def send_verification_email(email, username, verification_code):
     try:
         smtp_server = "smtp.gmail.com"
         smtp_port = 587
-        sender_email = "kprprewards@gmail.com"
-        sender_password = "gzgg cjes oumt wkpl"
+        sender_email = os.environ.get('SMTP_EMAIL')
+        sender_password = os.environ.get('SMTP_PASSWORD')
+        
+        if not sender_email or not sender_password:
+            print("❌ SMTP credentials not configured in environment variables")
+            return False
 
         subject = f"Verify Your {config['app_name']} Account"
         
@@ -197,8 +201,12 @@ def send_password_reset_email(email, username, reset_code):
     try:
         smtp_server = "smtp.gmail.com"
         smtp_port = 587
-        sender_email = "kprprewards@gmail.com"
-        sender_password = "gzgg cjes oumt wkpl"
+        sender_email = os.environ.get('SMTP_EMAIL')
+        sender_password = os.environ.get('SMTP_PASSWORD')
+        
+        if not sender_email or not sender_password:
+            print("❌ SMTP credentials not configured in environment variables")
+            return False
 
         subject = f"Password Reset - {config['app_name']}"
         
@@ -1798,8 +1806,12 @@ def send_email(to_email, subject, content):
     try:
         smtp_server = "smtp.gmail.com"
         smtp_port = 587
-        sender_email = "kprprewards@gmail.com"
-        sender_password = "gzgg cjes oumt wkpl"
+        sender_email = os.environ.get('SMTP_EMAIL')
+        sender_password = os.environ.get('SMTP_PASSWORD')
+        
+        if not sender_email or not sender_password:
+            print("❌ SMTP credentials not configured in environment variables")
+            return False
 
         msg = MIMEMultipart()
         msg['From'] = sender_email
