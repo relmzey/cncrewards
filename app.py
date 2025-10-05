@@ -266,7 +266,15 @@ Created by {config['created_by']}
 YouTube: {config['youtube_channel']}
             """
             
-            # Insert user first
+            # Send verification email BEFORE inserting user
+            try:
+                email_sent = send_email(email, subject, content)
+                print(f"Email send attempt to {email}: {'Success' if email_sent else 'Failed'}")
+            except Exception as email_error:
+                print(f"Email sending exception: {email_error}")
+                email_sent = False
+            
+            # Insert user into database
             try:
                 users_collection.insert_one({
                     "username": username,
@@ -278,9 +286,10 @@ YouTube: {config['youtube_channel']}
                     "reset_code": None,
                     "created_at": datetime.now()
                 })
+                print(f"User {username} successfully created in database")
             except Exception as e:
                 print(f"Database error during user creation: {e}")
-                flash('Registration failed: Database error. Please try again.')
+                flash('Registration failed: Database error. Please try again.', 'danger')
                 return render_template('register.html', config=config)
             
             # Track IP (non-critical)
@@ -293,14 +302,6 @@ YouTube: {config['youtube_channel']}
                     })
                 except Exception as e:
                     print(f"IP tracking error (non-critical): {e}")
-            
-            # Send verification email
-            try:
-                email_sent = send_email(email, subject, content)
-                print(f"Email send attempt to {email}: {'Success' if email_sent else 'Failed'}")
-            except Exception as email_error:
-                print(f"Email sending exception: {email_error}")
-                email_sent = False
             
             # Send webhook for new registration
             try:
@@ -320,14 +321,17 @@ YouTube: {config['youtube_channel']}
             except Exception as e:
                 print(f"Webhook error (non-critical): {e}")
             
-            # Store email in session for verification page
+            # Store email and verification code in session for verification page
             session['pending_verification_email'] = email
+            session['pending_verification_code'] = verification_code
             session.permanent = True
+            
+            print(f"Redirecting to verify_email for {email}")
             
             if email_sent:
                 flash('Registration successful! Please check your email for the 6-digit verification code.', 'success')
             else:
-                flash('Registration successful! However, email could not be sent. Please contact support for verification code.', 'warning')
+                flash('Registration successful! Please enter the verification code below.', 'info')
             
             return redirect(url_for('verify_email', email=email))
             
@@ -342,18 +346,31 @@ YouTube: {config['youtube_channel']}
 
 @app.route('/verify_email/<email>', methods=['GET'])
 def verify_email(email):
+    print(f"verify_email route accessed for: {email}")
+    
     # Verify the user exists and needs verification
     user = users_collection.find_one({"email": email})
     
     if not user:
+        print(f"User not found for email: {email}")
         flash('Invalid email address!', 'danger')
         return redirect(url_for('login'))
     
     if user.get('is_verified'):
+        print(f"User already verified: {email}")
         flash('Email already verified! Please login.', 'info')
         return redirect(url_for('login'))
     
-    return render_template('verify_email.html', email=email, config=config)
+    print(f"Rendering verify_email.html for {email}")
+    
+    # Check if we have the code in session (for cases where email wasn't sent)
+    session_code = session.get('pending_verification_code')
+    show_code_hint = session_code is not None
+    
+    return render_template('verify_email.html', 
+                         email=email, 
+                         config=config, 
+                         show_code_hint=show_code_hint)
 
 @app.route('/verify_code', methods=['POST'])
 def verify_code():
