@@ -295,7 +295,12 @@ YouTube: {config['youtube_channel']}
                     print(f"IP tracking error (non-critical): {e}")
             
             # Send verification email
-            email_sent = send_email(email, subject, content)
+            try:
+                email_sent = send_email(email, subject, content)
+                print(f"Email send attempt to {email}: {'Success' if email_sent else 'Failed'}")
+            except Exception as email_error:
+                print(f"Email sending exception: {email_error}")
+                email_sent = False
             
             # Send webhook for new registration
             try:
@@ -308,20 +313,22 @@ YouTube: {config['youtube_channel']}
                         {"name": "Email", "value": email, "inline": True},
                         {"name": "IP Address", "value": user_ip, "inline": True},
                         {"name": "Device", "value": device_info, "inline": True},
-                        {"name": "Status", "value": "Pending Email Verification", "inline": True}
+                        {"name": "Status", "value": "Pending Email Verification", "inline": True},
+                        {"name": "Email Sent", "value": "✅ Yes" if email_sent else "❌ No", "inline": True}
                     ]
                 )
             except Exception as e:
                 print(f"Webhook error (non-critical): {e}")
             
+            # Store email in session for verification page
+            session['pending_verification_email'] = email
+            session.permanent = True
+            
             if email_sent:
-                flash('Registration successful! Please check your email for verification code.', 'success')
+                flash('Registration successful! Please check your email for the 6-digit verification code.', 'success')
             else:
                 flash('Registration successful! However, email could not be sent. Please contact support for verification code.', 'warning')
             
-            # Store email in session for verification page
-            session['pending_verification_email'] = email
-            session.modified = True
             return redirect(url_for('verify_email', email=email))
             
         except Exception as e:
@@ -469,15 +476,22 @@ Please use this code to verify your email and access your account.
 Best regards,
 The {config['app_name']} Team
                 """
-                email_sent = send_email(user_data['email'], subject, content)
+                try:
+                    email_sent = send_email(user_data['email'], subject, content)
+                    print(f"Verification email send result for {user_data['email']}: {email_sent}")
+                except Exception as e:
+                    print(f"Error sending verification email: {e}")
+                    email_sent = False
+                
+                # Store email in session for verification page
+                session['pending_verification_email'] = user_data['email']
+                session.permanent = True
                 
                 if email_sent:
                     flash('Email not verified! A new verification code has been sent to your email.', 'success')
                 else:
-                    flash('Email not verified! However, the verification email could not be sent. Please contact support.', 'warning')
+                    flash('Email not verified! However, verification email could not be sent. Please contact support.', 'warning')
                 
-                # Store email in session for verification page
-                session['pending_verification_email'] = user_data['email']
                 return redirect(url_for('verify_email', email=user_data['email']))
         else:
             flash('Invalid username or password!', 'danger')
