@@ -1,0 +1,79 @@
+
+{% extends "base.html" %}
+
+{% block title %}Private Admin Panel - {{ config.app_name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0"><i class="fas fa-user-secret"></i> Private Admin Panel</h4>
+                <small>Protected Route - Password Required</small>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Warning:</strong> This is a private admin panel. All actions are irreversible and logged.
+                </div>
+
+                <!-- Delete Specific User -->
+                <div class="card mb-4">
+                    <div class="card-header bg-dark text-white">
+                        <h5><i class="fas fa-user-minus"></i> Delete Specific User</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST">
+                            <input type="hidden" name="action" value="delete_user">
+                            <div class="mb-3">
+                                <label for="delete_username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="delete_username" name="username" placeholder="Enter username to delete" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="delete_password" class="form-label">Access Password</label>
+                                <input type="password" class="form-control" id="delete_password" name="password" placeholder="Enter password" required>
+                            </div>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Delete User
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Reset All Data -->
+                <div class="card border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h5><i class="fas fa-exclamation-circle"></i> Reset All Data (DANGEROUS)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-danger">
+                            <i class="fas fa-radiation"></i>
+                            <strong>EXTREME CAUTION:</strong> This will permanently delete ALL users, purchases, timers, cooldowns, routes, and IP tracking data. This action CANNOT be undone!
+                        </div>
+                        <form method="POST" onsubmit="return confirm('Are you ABSOLUTELY SURE you want to delete ALL data? This cannot be undone!');">
+                            <input type="hidden" name="action" value="reset_all">
+                            <div class="mb-3">
+                                <label for="reset_confirm" class="form-label">Type "RESET ALL DATA" to confirm</label>
+                                <input type="text" class="form-control" id="reset_confirm" name="confirm_reset" placeholder="Type RESET ALL DATA" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="reset_password" class="form-label">Access Password</label>
+                                <input type="password" class="form-control" id="reset_password" name="password" placeholder="Enter password" required>
+                            </div>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-bomb"></i> Reset All Data
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                        <i class="fas fa-home"></i> Back to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
