@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 
 {% block title %}Verify Email - {{ config.app_name }}{% endblock %}
@@ -6,27 +7,41 @@
 <div class="row justify-content-center">
     <div class="col-md-6">
         <div class="card">
-            <div class="card-header">
-                <h4 class="mb-0"><i class="fas fa-envelope-check"></i> Verify Email</h4>
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-envelope-open-text"></i> Email Verification</h4>
             </div>
             <div class="card-body">
-                <p>Please enter the 6-digit verification code sent to <strong>{{ email }}</strong></p>
-                <form method="POST" action="{{ url_for('verify_code') }}">
-                    <input type="hidden" name="email" value="{{ email }}">
+                <div class="text-center mb-4">
+                    <i class="fas fa-envelope fa-3x text-primary mb-3"></i>
+                    <p class="lead">Please verify your email address</p>
+                    <p class="text-muted">We sent a 6-digit verification code to:<br><strong>{{ email }}</strong></p>
+                </div>
+
+                <form method="POST">
                     <div class="mb-3">
-                        <label for="code" class="form-label">Verification Code</label>
-                        <input type="text" class="form-control" id="code" name="code" maxlength="6" pattern="[0-9]{6}" required autofocus>
-                        <small class="form-text text-muted">Enter the 6-digit code from your email</small>
+                        <label for="code" class="form-label">Enter Verification Code</label>
+                        <input type="text" class="form-control form-control-lg text-center" id="code" name="code" 
+                               maxlength="6" pattern="[0-9]{6}" placeholder="000000" required autofocus 
+                               style="letter-spacing: 10px; font-size: 24px;">
+                        <small class="form-text text-muted">Code expires in 15 minutes</small>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-check"></i> Verify Email
+                    
+                    <button type="submit" class="btn btn-primary w-100 btn-lg">
+                        <i class="fas fa-check-circle"></i> Verify Email
                     </button>
                 </form>
-                <div class="text-center mt-3">
-                    <p>Didn't receive the code?</p>
+
+                <hr class="my-4">
+
+                <div class="text-center">
+                    <p class="mb-2">Didn't receive the code?</p>
                     <a href="{{ url_for('resend_verification', email=email) }}" class="btn btn-outline-secondary">
                         <i class="fas fa-redo"></i> Resend Code
                     </a>
+                </div>
+
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle"></i> <strong>Tip:</strong> Check your spam folder if you don't see the email.
                 </div>
             </div>
         </div>
