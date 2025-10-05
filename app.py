@@ -319,7 +319,9 @@ YouTube: {config['youtube_channel']}
             else:
                 flash('Registration successful! However, email could not be sent. Please contact support for verification code.', 'warning')
             
+            # Store email in session for verification page
             session['pending_verification_email'] = email
+            session.modified = True
             return redirect(url_for('verify_email', email=email))
             
         except Exception as e:
@@ -331,8 +333,19 @@ YouTube: {config['youtube_channel']}
 
     return render_template('register.html', config=config)
 
-@app.route('/verify_email/<email>')
+@app.route('/verify_email/<email>', methods=['GET'])
 def verify_email(email):
+    # Verify the user exists and needs verification
+    user = users_collection.find_one({"email": email})
+    
+    if not user:
+        flash('Invalid email address!', 'danger')
+        return redirect(url_for('login'))
+    
+    if user.get('is_verified'):
+        flash('Email already verified! Please login.', 'info')
+        return redirect(url_for('login'))
+    
     return render_template('verify_email.html', email=email, config=config)
 
 @app.route('/verify_code', methods=['POST'])
@@ -456,9 +469,15 @@ Please use this code to verify your email and access your account.
 Best regards,
 The {config['app_name']} Team
                 """
-                send_email(user_data['email'], subject, content)
+                email_sent = send_email(user_data['email'], subject, content)
                 
-                flash('Email not verified! A new verification code has been sent to your email.', 'warning')
+                if email_sent:
+                    flash('Email not verified! A new verification code has been sent to your email.', 'success')
+                else:
+                    flash('Email not verified! However, the verification email could not be sent. Please contact support.', 'warning')
+                
+                # Store email in session for verification page
+                session['pending_verification_email'] = user_data['email']
                 return redirect(url_for('verify_email', email=user_data['email']))
         else:
             flash('Invalid username or password!', 'danger')
