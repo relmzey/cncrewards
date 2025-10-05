@@ -2,6 +2,8 @@
   "app_name": "CNC REWARDS",
   "created_by": "Relmzey",
   "youtube_channel": "@cnc_yt",
+  "kprp_ticket_tutorial": "https://youtu.be/tutorial_link_here",
+  "discord_link": "https://discord.gg/DWzJFuyeFy",
   "database_url": "sqlite:///kprp_rewards.db",
   "email_config": {
     "smtp_server": "smtp.sendgrid.net",

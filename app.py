@@ -34,6 +34,14 @@ app.secret_key = os.environ.get('SESSION_SECRET')
 if not app.secret_key:
     raise ValueError("SESSION_SECRET environment variable must be set for security")
 
+# Add Cache-Control headers to prevent caching issues
+@app.after_request
+def add_header(response):
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
+
 # Initialize Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -1259,7 +1267,7 @@ Status: Completed ✅
 
 🎟️ YOUR VOUCHER CODE: {voucher_code}
 
-This 16-character code can be used to redeem {item_name} in the KPRP server. Use our voucher validator to verify authenticity.
+This 16-character code can be used to redeem {item_name} in the KPRP server.
 
 If you have any questions, feel free to contact our support team.
 
@@ -1365,29 +1373,85 @@ def complete_order_with_code():
     username = purchase_data['user']['username']
     email = purchase_data['user']['email']
     voucher_code = purchase_data.get('voucher_code', '')
+    item_details = purchase_data.get('item_details', '')
+    item_type = purchase_data.get('store_type', '')
 
-    subject = f"Order #{purchase_id} Completed - {config['app_name']}"
+    subject = f"Order #{purchase_id} Successfully Completed - {config['app_name']}"
+    
+    # Extract UID or KPRP Name from item_details using regex for robustness
+    import re
+    uid = ''
+    kprp_name = ''
+    
+    uid_match = re.search(r'UID:\s*(.+?)(?:\n|$)', item_details, re.IGNORECASE)
+    if uid_match:
+        uid = uid_match.group(1).strip()
+    
+    kprp_match = re.search(r'KPRP Name:\s*(.+?)(?:\n|$)', item_details, re.IGNORECASE)
+    if kprp_match:
+        kprp_name = kprp_match.group(1).strip()
+    
+    # Determine category-specific message
+    content_body = ""
+    
+    if 'pubg' in item_name.lower() or 'uc' in item_name.lower():
+        # PUBG UC
+        content_body = f"""Your PUBG UC has been credited to the following UID: {uid}
+
+If you did not receive it, please contact us through Discord: {config['discord_link']}"""
+    
+    elif 'pes' in item_name.lower() or 'efootball' in item_name.lower():
+        # PES/eFootball
+        content_body = f"""Your eFootball coins have been credited to the following UID: {uid}
+
+If you did not receive it, please contact us through Discord: {config['discord_link']}"""
+    
+    elif 'diamond' in item_name.lower() and 'fire' in item_name.lower():
+        # Free Fire Diamonds
+        content_body = f"""Your Free Fire diamonds have been credited to the following UID: {uid}
+
+If you did not receive it, please contact us through Discord: {config['discord_link']}"""
+    
+    elif 'like' in item_name.lower():
+        # Likes
+        content_body = f"""You got {admin_code} likes for UID: {uid}
+
+Thank you for using our service!"""
+    
+    elif 'amazon' in item_name.lower() or 'google' in item_name.lower():
+        # Amazon or Google Play vouchers - use admin_code or fall back to voucher_code
+        code_to_use = admin_code if admin_code else voucher_code
+        content_body = f"""Your voucher code: {code_to_use}
+
+Please use this code to redeem your {item_name}."""
+    
+    elif 'kprp' in item_name.lower() and 'voucher' not in item_name.lower():
+        # KPRP items (cash, VIP, cars) - not vouchers
+        content_body = f"""Your KPRP item request has been confirmed for in-game name: {kprp_name}
+
+Please create a support ticket to complete the process.
+Tutorial: {config['kprp_ticket_tutorial']}"""
+    
+    else:
+        # Generic completion message
+        content_body = f"""Your order has been successfully completed."""
+        if admin_code:
+            content_body += f"\n\nCode/Details: {admin_code}"
+        elif voucher_code:
+            content_body += f"\n\nVoucher Code: {voucher_code}"
+
     content = f"""
 Dear {username},
 
-🎉 Congratulations! Your order has been successfully completed.
+Order Successfully Completed
 
 Order ID: #{purchase_id}
 Item: {item_name}
 Status: Completed ✅
-"""
 
-    # Add codes to email based on item type
-    if voucher_code:
-        content += f"\nVoucher Code: {voucher_code}"
-    if admin_code:
-        content += f"\nRedeem Code: {admin_code}"
+{content_body}
 
-    content += f"""
-
-Your order is now ready! If you have any questions, please contact our support team.
-
-Thank you for using {config['app_name']}!
+If you have any questions, please contact our support team.
 
 Best regards,
 The {config['app_name']} Team
