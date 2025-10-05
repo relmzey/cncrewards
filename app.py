@@ -321,17 +321,20 @@ YouTube: {config['youtube_channel']}
             except Exception as e:
                 print(f"Webhook error (non-critical): {e}")
             
-            # Store email and verification code in session for verification page
+            # Store email in session for verification page
             session['pending_verification_email'] = email
-            session['pending_verification_code'] = verification_code
             session.permanent = True
+            
+            # If email failed, store code in session as fallback
+            if not email_sent:
+                session['pending_verification_code'] = verification_code
             
             print(f"Redirecting to verify_email for {email}")
             
             if email_sent:
                 flash('Registration successful! Please check your email for the 6-digit verification code.', 'success')
             else:
-                flash('Registration successful! Please enter the verification code below.', 'info')
+                flash(f'Registration successful! Email delivery failed. Your verification code is: {verification_code}', 'warning')
             
             return redirect(url_for('verify_email', email=email))
             
@@ -504,10 +507,14 @@ The {config['app_name']} Team
                 session['pending_verification_email'] = user_data['email']
                 session.permanent = True
                 
+                # If email failed, store code in session as fallback
+                if not email_sent:
+                    session['pending_verification_code'] = verification_code
+                
                 if email_sent:
                     flash('Email not verified! A new verification code has been sent to your email.', 'success')
                 else:
-                    flash('Email not verified! However, verification email could not be sent. Please contact support.', 'warning')
+                    flash(f'Email not verified! Email delivery failed. Your verification code is: {verification_code}', 'warning')
                 
                 return redirect(url_for('verify_email', email=user_data['email']))
         else:
