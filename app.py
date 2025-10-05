@@ -194,46 +194,54 @@ def index():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
+        try:
+            username = request.form['username']
+            email = request.form['email']
+            password = request.form['password']
 
-        user_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', ''))
-        if ',' in user_ip:
-            user_ip = user_ip.split(',')[0].strip()
+            # Get IP address
+            user_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', 'unknown'))
+            if ',' in user_ip:
+                user_ip = user_ip.split(',')[0].strip()
 
-        user_agent = request.headers.get('User-Agent', 'Unknown')
-        device_info = get_device_info(user_agent)
+            user_agent = request.headers.get('User-Agent', 'Unknown')
+            device_info = get_device_info(user_agent)
 
-        # Check if user exists
-        if users_collection.find_one({"$or": [{"username": username}, {"email": email}]}):
-            flash('Username or email already exists!')
-            return render_template('register.html', config=config)
+            # Check if user exists
+            existing_user = users_collection.find_one({"$or": [{"username": username}, {"email": email}]})
+            if existing_user:
+                flash('Username or email already exists!')
+                return render_template('register.html', config=config)
 
-        # Check if IP already has an account
-        existing_ip = ip_tracking_collection.find_one({"ip_address": user_ip})
-        if existing_ip:
-            # Send webhook for alt account attempt
-            send_webhook_log(
-                "🚨 Alt Account Attempt Detected",
-                f"Someone tried to create another account from an existing IP",
-                0xff0000,
-                [
-                    {"name": "Attempted Username", "value": username, "inline": True},
-                    {"name": "Attempted Email", "value": email, "inline": True},
-                    {"name": "IP Address", "value": user_ip, "inline": True},
-                    {"name": "Device", "value": device_info, "inline": False},
-                    {"name": "Original Account Created", "value": existing_ip['account_created_at'].strftime('%Y-%m-%d %H:%M:%S'), "inline": True}
-                ]
-            )
-            flash('Only one account per IP address is allowed!')
-            return render_template('register.html', config=config)
+            # Check if IP already has an account (only if IP is valid)
+            if user_ip and user_ip != 'unknown':
+                try:
+                    existing_ip = ip_tracking_collection.find_one({"ip_address": user_ip})
+                    if existing_ip:
+                        # Send webhook for alt account attempt
+                        send_webhook_log(
+                            "🚨 Alt Account Attempt Detected",
+                            f"Someone tried to create another account from an existing IP",
+                            0xff0000,
+                            [
+                                {"name": "Attempted Username", "value": username, "inline": True},
+                                {"name": "Attempted Email", "value": email, "inline": True},
+                                {"name": "IP Address", "value": user_ip, "inline": True},
+                                {"name": "Device", "value": device_info, "inline": False},
+                                {"name": "Original Account Created", "value": existing_ip['account_created_at'].strftime('%Y-%m-%d %H:%M:%S'), "inline": True}
+                            ]
+                        )
+                        flash('Only one account per IP address is allowed!')
+                        return render_template('register.html', config=config)
+                except Exception as e:
+                    print(f"IP tracking check error (non-critical): {e}")
+                    # Continue with registration if IP check fails
 
-        verification_code = generate_code()
-        password_hash = generate_password_hash(password)
+            verification_code = generate_code()
+            password_hash = generate_password_hash(password)
 
-        subject = f"Welcome to {config['app_name']} - Verify Your Account"
-        content = f"""
+            subject = f"Welcome to {config['app_name']} - Verify Your Account"
+            content = f"""
 Dear {username},
 
 Welcome to {config['app_name']}! We're excited to have you join our community of coin earners.
@@ -253,44 +261,68 @@ Best regards,
 The {config['app_name']} Team
 Created by {config['created_by']}
 YouTube: {config['youtube_channel']}
-        """
-        email_sent = send_email(email, subject, content)
-
-        if email_sent:
-            users_collection.insert_one({
-                "username": username,
-                "email": email,
-                "password_hash": password_hash,
-                "balance": 0,
-                "is_verified": False,
-                "verification_code": verification_code,
-                "reset_code": None,
-                "created_at": datetime.now()
-            })
-            ip_tracking_collection.insert_one({
-                "ip_address": user_ip,
-                "username": username,
-                "account_created_at": datetime.now()
-            })
+            """
+            
+            # Insert user first
+            try:
+                users_collection.insert_one({
+                    "username": username,
+                    "email": email,
+                    "password_hash": password_hash,
+                    "balance": 0,
+                    "is_verified": False,
+                    "verification_code": verification_code,
+                    "reset_code": None,
+                    "created_at": datetime.now()
+                })
+            except Exception as e:
+                print(f"Database error during user creation: {e}")
+                flash('Registration failed: Database error. Please try again.')
+                return render_template('register.html', config=config)
+            
+            # Track IP (non-critical)
+            if user_ip and user_ip != 'unknown':
+                try:
+                    ip_tracking_collection.insert_one({
+                        "ip_address": user_ip,
+                        "username": username,
+                        "account_created_at": datetime.now()
+                    })
+                except Exception as e:
+                    print(f"IP tracking error (non-critical): {e}")
+            
+            # Send verification email
+            email_sent = send_email(email, subject, content)
             
             # Send webhook for new registration
-            send_webhook_log(
-                "👤 New User Registration",
-                f"A new user has registered!",
-                0x00ff00,
-                [
-                    {"name": "Username", "value": username, "inline": True},
-                    {"name": "Email", "value": email, "inline": True},
-                    {"name": "IP Address", "value": user_ip, "inline": True},
-                    {"name": "Device", "value": device_info, "inline": True},
-                    {"name": "Status", "value": "Pending Email Verification", "inline": True}
-                ]
-            )
+            try:
+                send_webhook_log(
+                    "👤 New User Registration",
+                    f"A new user has registered!",
+                    0x00ff00,
+                    [
+                        {"name": "Username", "value": username, "inline": True},
+                        {"name": "Email", "value": email, "inline": True},
+                        {"name": "IP Address", "value": user_ip, "inline": True},
+                        {"name": "Device", "value": device_info, "inline": True},
+                        {"name": "Status", "value": "Pending Email Verification", "inline": True}
+                    ]
+                )
+            except Exception as e:
+                print(f"Webhook error (non-critical): {e}")
             
-            flash('Registration successful! Please check your email for verification code.')
+            if email_sent:
+                flash('Registration successful! Please check your email for verification code.')
+            else:
+                flash('Registration successful! However, email could not be sent. Please contact support for verification code.')
+            
             return redirect(url_for('verify_email', email=email))
-        else:
-            flash('Registration failed: Could not send verification email. Please contact support.')
+            
+        except Exception as e:
+            print(f"Registration error: {e}")
+            import traceback
+            traceback.print_exc()
+            flash('Registration failed: An unexpected error occurred. Please try again.')
             return render_template('register.html', config=config)
 
     return render_template('register.html', config=config)
