@@ -11,14 +11,20 @@
             </div>
             <div class="card-body">
                 <p>Please enter the 6-digit verification code sent to <strong>{{ email }}</strong></p>
+                {% if show_code_hint %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> If you didn't receive the email, please check your spam folder or click "Resend Code" below.
+                </div>
+                {% endif %}
                 <form method="POST" action="{{ url_for('verify_code') }}">
                     <input type="hidden" name="email" value="{{ email }}">
                     <div class="mb-3">
                         <label for="code" class="form-label">Verification Code</label>
-                        <input type="text" class="form-control" id="code" name="code" maxlength="6" pattern="[0-9]{6}" required>
+                        <input type="text" class="form-control" id="code" name="code" maxlength="6" pattern="[0-9]{6}" required autofocus>
+                        <small class="form-text text-muted">Enter the 6-digit code from your email</small>
                     </div>
                     <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-check"></i> Verify
+                        <i class="fas fa-check"></i> Verify Email
                     </button>
                 </form>
                 <div class="text-center mt-3">
